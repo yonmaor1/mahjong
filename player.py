@@ -16,7 +16,10 @@ class Player:
         return False
 
     def pong(self, tile):
-        ...
+        self.revealed += [tile, tile, tile]
+        self.hand.remove(tile)
+        self.hand.remove(tile)
+        self.hand.remove(tile)
 
     def canKong(self, tile):
         if self.hand.count(tile) == 3:
@@ -24,7 +27,11 @@ class Player:
         return False
     
     def kong(self, tile):
-        ...
+        self.revealed += [tile, tile, tile, tile]
+        self.hand.remove(tile)
+        self.hand.remove(tile)
+        self.hand.remove(tile)
+        self.hand.remove(tile)
 
     def canChi(self, tile):
         value, suit = tile
@@ -35,8 +42,11 @@ class Player:
         
         return False
 
-    def chi(self, tile):
-        ...
+    def chi(self, tossedTile, handTile1, handTile2):
+        self.revealed += [tossedTile, handTile1, handTile2]
+        self.hand.remove(tossedTile)
+        self.hand.remove(handTile1)
+        self.hand.remove(handTile2)
 
     def hu(self, tile):
         ...

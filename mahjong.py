@@ -52,6 +52,8 @@ def playRound(player1, player2, player3, player4):
     playerTurn(player1, deck)
 
 def playerTurn(player, tossedTile, deck):
+    if player.canPong(tossedTile):
+        ...
     player.drawTile(deck)
     player.tossTile()
 
