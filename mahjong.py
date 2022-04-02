@@ -51,8 +51,9 @@ def playRound(player1, player2, player3, player4):
     ### STOPPED HERE
     playerTurn(player1, deck)
 
-def playerTurn(player, deck):
-    ...
+def playerTurn(player, tossedTile, deck):
+    player.drawTile(deck)
+    player.tossTile()
 
 def startGame():
     player1, player2, player3, player4 = initPlayers()

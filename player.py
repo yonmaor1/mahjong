@@ -8,12 +8,32 @@ class Player:
         self.isDealer = False
         self.hand = []
         self.revealed = []
+        self.won = False
+
+    def canPong(self, tile):
+        if self.hand.count(tile) >= 2:
+            return True
+        return False
 
     def pong(self, tile):
         ...
 
+    def canKong(self, tile):
+        if self.hand.count(tile) == 3:
+            return True
+        return False
+    
     def kong(self, tile):
         ...
+
+    def canChi(self, tile):
+        value, suit = tile
+        if (((value - 1, suit) and (value - 2, suit)) in self.hand or 
+            ((value + 1, suit) and (value + 2, suit)) in self.hand or
+            ((value - 1, suit) and (value + 1, suit)) in self.hand):
+            return True
+        
+        return False
 
     def chi(self, tile):
         ...
@@ -30,11 +50,16 @@ class Player:
         print(f'Hand: {self.hand}')
 
     def tossTile(self):
-        ...
+        tileToToss = input('What do you want to toss?')
+        while tileToToss not in self.hand:
+            print(f'{tileToToss} is not in your hand', end = '')
+            tileToToss = input('What do you want to toss?')
+
+        self.hand.remove(tileToToss)
+        return tileToToss
 
     
 def getHand(deck):
-    indecies = []
     hand = []
     while len(hand) < 16:
         newTile = random.choice(deck)
