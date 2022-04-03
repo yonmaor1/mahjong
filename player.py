@@ -1,8 +1,9 @@
 import random
 
 class Player:
-    def __init__(self, name, isAI):
+    def __init__(self, name, num, isAI):
         self.name = name
+        self.num = num
         self.isAI = isAI
         self.isPlaying = False
         self.isDealer = False
@@ -16,7 +17,7 @@ class Player:
         return False
 
     def pong(self, tile):
-        self.revealed += [tile, tile, tile]
+        self.revealed.append([tile, tile, tile])
         self.hand.remove(tile)
         self.hand.remove(tile)
         self.hand.remove(tile)
@@ -27,7 +28,7 @@ class Player:
         return False
     
     def kong(self, tile):
-        self.revealed += [tile, tile, tile, tile]
+        self.revealed.append([tile, tile, tile, tile])
         self.hand.remove(tile)
         self.hand.remove(tile)
         self.hand.remove(tile)
@@ -42,12 +43,39 @@ class Player:
         
         return False
 
-    def chi(self, tossedTile, handTile1, handTile2):
-        self.revealed += [tossedTile, handTile1, handTile2]
-        self.hand.remove(tossedTile)
-        self.hand.remove(handTile1)
-        self.hand.remove(handTile2)
+    def chi(self, tossedTile):
+        otherTiles = input('Please enter comma seperated indecies of the tiles you would like to chi')
+        otherTiles = otherTiles.split(',')
+        index1 = int(otherTiles[0])
+        index2 = int(otherTiles[1])
 
+        chiTile1 = self.hand[index1]
+        chiTile2 = self.hand[index2]
+
+        self.revealed.append([tossedTile, chiTile1, chiTile2])
+        self.hand.remove(tossedTile)
+        self.hand.remove(chiTile1)
+        self.hand.remove(chiTile2)
+
+    @staticmethod
+    def isSet(tiles):
+        # takes a set of 3 tiles and returns True if they form a set        
+        if tiles[0] == tiles[1] == tiles[2]:
+            return True
+
+        # check is same suite
+        elif tiles[0][1] == tiles[1][1] == tiles[2][1]:
+            # check if values directly follow one another
+            values = [tiles[0][0], tiles[1][0], tiles[2][0]]
+            values.sort()
+            if (values[0] + 1 == values[1]) and (values[1] + 1 == values[2]):
+                return True
+        
+        return False
+    
+    def canHu(self, tile):
+        ...
+    
     def hu(self, tile):
         ...
 
@@ -78,8 +106,8 @@ def getHand(deck):
 
     return hand
 
-def giveHands(player1, player2, player3, player4, deck):
-    player1.hand = getHand(deck)
-    player2.hand = getHand(deck)
-    player3.hand = getHand(deck)
-    player4.hand = getHand(deck)
+def giveHands(players, deck):
+    players[0].hand = getHand(deck)
+    players[1].hand = getHand(deck)
+    players[2].hand = getHand(deck)
+    players[3].hand = getHand(deck)
