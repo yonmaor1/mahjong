@@ -13,15 +13,15 @@ def makeDeck():
         deck += [(i, 'number') for j in range(4)]
 
     # directions
-    deck += [('dung',) for j in range(4)]
-    deck += [('nan',) for j in range(4)]
-    deck += [('xi',) for j in range(4)]
-    deck += [('bei',) for j in range(4)]
+    deck += [('dung', None) for j in range(4)]
+    deck += [('nan', None) for j in range(4)]
+    deck += [('xi', None) for j in range(4)]
+    deck += [('bei', None) for j in range(4)]
 
     # dragons
-    deck += [('zhong',) for j in range(4)]
-    deck += [('fa',) for j in range(4)]
-    deck += [('box',) for j in range(4)]
+    deck += [('zhong', None) for j in range(4)]
+    deck += [('fa', None) for j in range(4)]
+    deck += [('box', None) for j in range(4)]
 
     return deck
 

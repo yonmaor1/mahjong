@@ -36,6 +36,10 @@ class Player:
 
     def canChi(self, tile):
         value, suit = tile
+        # can only Chi with suit tiles
+        if suit is None:
+            return False
+        
         if (((value - 1, suit) and (value - 2, suit)) in self.hand or 
             ((value + 1, suit) and (value + 2, suit)) in self.hand or
             ((value - 1, suit) and (value + 1, suit)) in self.hand):
@@ -44,7 +48,8 @@ class Player:
         return False
 
     def chi(self, tossedTile):
-        otherTiles = input('Please enter comma seperated indecies of the tiles you would like to chi')
+        otherTiles = input('''Please enter comma seperated indecies of the 
+                            tiles you would like to chi''')
         otherTiles = otherTiles.split(',')
         index1 = int(otherTiles[0])
         index2 = int(otherTiles[1])
@@ -52,7 +57,27 @@ class Player:
         chiTile1 = self.hand[index1]
         chiTile2 = self.hand[index2]
 
-        self.revealed.append([tossedTile, chiTile1, chiTile2])
+        tiles = [ tossedTile, chiTile1, chiTile2 ]
+        values = [tiles[0][0], tiles[1][0], tiles[2][0]]
+        values.sort()
+
+        while not ( (tiles[0][1] == tiles[1][1] == tiles[2][1]) and 
+                    (values[0] + 1 == values[1]) and (values[1] + 1 == values[2])):
+            print('These tiles dont form a set', end='')
+            otherTiles = input('''Please enter comma seperated indecies of the 
+                                tiles you would like to chi''')
+            otherTiles = otherTiles.split(',')
+            index1 = int(otherTiles[0])
+            index2 = int(otherTiles[1])
+
+            chiTile1 = self.hand[index1]
+            chiTile2 = self.hand[index2]
+
+            tiles = [ tossedTile, chiTile1, chiTile2 ]
+            values = [tiles[0][0], tiles[1][0], tiles[2][0]]
+            values.sort()
+
+        self.revealed.append(tiles)
         self.hand.remove(tossedTile)
         self.hand.remove(chiTile1)
         self.hand.remove(chiTile2)
