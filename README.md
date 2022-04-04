@@ -1,2 +1,7 @@
 # mahjong
-112 Term Project. Network-based multiplayer mode, and mahjbot mode - a single player against an AI player 
+Welcome to Mahjong! This is a python, network-based multiplayer mahjong, with a mahjong AI that can play as a player. 
+
+# To Do List:
+- Build mahjbot AI
+- Implement sockets (?)
+- Graphics (pygame)
