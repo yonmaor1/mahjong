@@ -1,7 +1,6 @@
 from player import *
-import random
 
-def makeDeck():
+def getDeck():
     # returns a complete deck (still missing flowers / seasons)
     deck = []
     # populate the deck: siuted values are 1-9, 4 tiles of each
@@ -23,6 +22,8 @@ def makeDeck():
     deck += [('fa', None) for j in range(4)]
     deck += [('box', None) for j in range(4)]
 
+    # add seasons / flowers later
+
     return deck
 
 def initPlayers():
@@ -30,21 +31,21 @@ def initPlayers():
     player1Name = input('Enter Player 1s Name:')
     player1isAI = input('Make Player 1 an AI?')
 
-    player2Name = input('Enter Player 1s Name:')
-    player2isAI = input('Make Player 1 an AI?')
+    player2Name = input('Enter Player 2s Name:')
+    player2isAI = input('Make Player 2 an AI?')
 
-    player3Name = input('Enter Player 1s Name:')
-    player3isAI = input('Make Player 1 an AI?')
+    player3Name = input('Enter Player 3s Name:')
+    player3isAI = input('Make Player 3 an AI?')
 
-    player4Name = input('Enter Player 1s Name:')
-    player4isAI = input('Make Player 1 an AI?')
+    player4Name = input('Enter Player 4s Name:')
+    player4isAI = input('Make Player 4 an AI?')
 
-    player0 = Player(player1Name, 0, player1isAI)
-    player1 = Player(player2Name, 1, player2isAI)
-    player2 = Player(player3Name, 2, player3isAI)
-    player3 = Player(player4Name, 3, player4isAI)
+    player1 = Player(player1Name, 0, player1isAI)
+    player2 = Player(player2Name, 1, player2isAI)
+    player3 = Player(player3Name, 2, player3isAI)
+    player4 = Player(player4Name, 3, player4isAI)
 
-    players = [player0, player1, player2, player3]
+    players = [player1, player2, player3, player4]
 
     return players
 
@@ -57,58 +58,111 @@ def gameOver(players, tossedTile):
         return True
     return False
 
+def checkForAction(players, tossedTile):
+    # called in playRound > while not gameOver()
+    # check if players want to Kong / Pong
+    for player in [ players[turn], players[(turn+1)%4], players[(turn+2)%4] ]:
+        if player.canPong(tossedTile):
+            # Kong if and only if Pong
+            if player.canKong(tossedTile):
+                if player.isAI:
+                    action = 'kong'
+                    turn = player.num
+                    break
+                else:
+                    # input must be bool
+                    wantsToKong = input(f'{player.name} can Kong. Would you like to?')
+            else:
+                if player.isAI:
+                    action = 'pong'
+                    turn = player.num
+                    break
+                else:
+                    # input must be bool
+                    wantsToPong = input(f'{player.name} can Pong. Would you like to?')
+            
+            if wantsToKong: 
+                action = 'kong'
+                turn = player.num
+                break
+            elif wantsToPong: 
+                action = 'pong'
+                turn = player.num
+                break
+            else: 
+                action = None
+    return action, turn
+
 def playRound(players):
-    deck = makeDeck()
+    
+    # initializes game attributes
+    deck = getDeck()
     deadTiles = []
     turn = 0
     giveHands(players, deck)
-    players[0].isDealer = True
+    # if dealer wins they stay dealer
+    dealer = players[0]
+
     # first turn (must draw new tile)
     players[0].drawTile(deck)
     tossedTile = players[0].tossTile()
 
     # rest of the turns (a tossed tile exists)
     while not gameOver(players, tossedTile):
-        turn = (turn + 1) % 4
 
-        # to make sure player doesn't Stanley (pong thne draw a tile)
+        # to make sure player doesn't Stanley (pong / chi then draw a tile)
         action = None
 
         # check if anyone can Pong / Kong
         # if so, skip to their turn 
-        for player in [ players[turn], players[(turn+1)%4], players[(turn+2)%4] ]:
-            if player.canPong(tossedTile):
-                # Kong if and only if Pong
-                if player.canKong(tossedTile):
-                    # input must be bool
-                    wantsToKong = input(f'{player.name} can Kong. Would you like to?')
-                else:
-                    # input must be bool
-                    wantsToPong = input(f'{player.name} can Pong. Would you like to?')
-                
-                if wantsToKong: 
-                    action = 'kong'
-                    turn = player.num
-                    break
-                elif wantsToPong: 
-                    action = 'pong'
-                    turn = player.num
-                    break
-                else: 
-                    action = None
+        action, turn = checkForAction()
         
-        # if nobody Pongs/Kongs, check for Chi
-        if (action is None) and (players[(turn+1)%4].canChi(tossedTile)):
-            # input must be bool
-            wantsToChi = input(f'{player.name} can Chi. Would you like to?')
+        # if nobody Pongs/Kongs, check for Chi (only following player can Chi)
+        nextPlayer = players[(turn + 1) % 4]
+        if (action is None) and (nextPlayer.canChi(tossedTile)):
+            if nextPlayer.isAI:
+                action = 'chi'
+                break
+            else:
+                # input must be bool
+                wantsToChi = input(f'{nextPlayer.name} can Chi. Would you like to?')
+            
             if wantsToChi:
                 action = 'chi'
+                break
 
         if action is None:
             # if no action happened, tile is now dead
             deadTiles.append(tossedTile)
                 
+        turn = (turn + 1) % 4
         tossedTile = playerTurn(players[turn], action, tossedTile, deck)
+
+    # somebody can Hu
+    for player in players:
+        if player.won:
+            winner = player
+            # whoever tossed out winning card is loser, unless winner drew card
+            # not using loser rn, might impliment betting / drinking  
+            losers = [ players[turn] ]
+            if losers[0] is winner:
+                losers = [   players[(turn + 1) % 4], 
+                            players[(turn + 2) % 4], 
+                            players[(turn + 3) % 4] ]
+            keepPlaying = input(f'{winner.name} won! Keep playing?')
+
+    if not keepPlaying:
+        return
+
+    if winner is dealer:
+        # if dealer won they stay dealer
+        playRound(players)
+
+    else:
+        # if dealer lost, player 1 becomes dealer
+        for player in players:
+            player.num = (player.num + 1) % 4
+        playRound(players)
 
 
 def playerTurn(player, action, tossedTile, deck):
@@ -118,14 +172,21 @@ def playerTurn(player, action, tossedTile, deck):
     if action == 'pong':
         player.pong(tossedTile)
     elif action == 'kong':
+        # Kong draws tile from the back 
         player.kong(tossedTile)
+        player.drawTile(deck)
     elif action == 'chi':
         player.chi(tossedTile)
+    
     else:
         player.drawTile(deck)
     
     # must toss tile
-    tileToToss = player.tossTile()
+    if player.isAI:
+        tileToToss = player.tossTileAI()
+    else:
+        tileToToss = player.tossTile()
+    
     return tileToToss
 
 def startGame():
