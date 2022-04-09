@@ -61,9 +61,15 @@ class Player:
     def isChi(tiles):
         # takes a [list] of 3 tiles, and returns True if they are consequtive
         # tiles of the same suit 
+        suits = [ tiles[0][1], tiles[1][1], tiles[2][1] ]
+        if (suits[0] == None or
+            suits[1] == None or
+            suits[2] == None):
+            # can only Chi suit cards
+            return False
+
         values = [ tiles[0][0], tiles[1][0], tiles[2][0] ]
         values.sort()
-        suits = [ tiles[0][1], tiles[1][1], tiles[2][1] ]
         
         if ((suits[0] == suits[1] == suits[2]) and 
             (values[0] + 1 == values[1]) and 
@@ -94,7 +100,7 @@ class Player:
 
     @staticmethod
     def isSet(tiles):
-        # takes a set of 3 tiles and returns True if they form a set        
+        # takes a list of 3 tiles and returns True if they form a set        
         if Player.isPong(tiles) or Player.isChi(tiles):
             return True
         
@@ -149,18 +155,59 @@ class Player:
         self.hand.remove(tiles[0])
         self.hand.remove(tiles[1])
         self.hand.remove(tiles[2])
-    
-    def canHu(self, tile, sets = []):
-        # checks if player can Hu (win the game)
-        if len(sets) == len(self.hand):
-            return True
+
+    def findPairs(self, currentHand):
+        # returns a list containing every pair in players hand
+        pairs = []
+        for tile in currentHand:
+            if currentHand.count(tile) >= 2:
+                pairs.append([tile, tile])
+
+        return pairs
+
+    @ staticmethod
+    def canHuGivenPair(currentHand, sets = []):
+        # takes a hand, excluding a pair, and returns true of the hand can be
+        # arranged entirely into sets of 3 (backtracking)
+        
+        if len(currentHand) == 0:
+                return True
 
         else:
-            for tile in self.hand:
-                ...
-    
-    def hu(self, tile):
-        ...
+            # check every triple
+            for i in range(len(currentHand) - 2):
+                for j in range(i+1, len(currentHand) - 1):
+                    for k in range(j+1, len(currentHand)):
+                        tiles = [   currentHand[i], 
+                                    currentHand[j], 
+                                    currentHand[k] ]
+                        if Player.isSet(tiles):
+                            sets += tiles
+                            for tile in tiles:
+                                currentHand.remove(tile)
+                            solution = Player.canHuGivenPair(currentHand, sets)
+                            if solution:
+                                return solution
+                            else:
+                                # undo
+                                currentHand += tiles
+                                for tile in tiles:
+                                    sets.remove(tile)
+            return False
+                                
+    def canHu(self, tossedTile):
+        # checks if player can Hu (win the game)
+        currentHand = self.hand + [tossedTile]
+        pairs = self.findPairs(currentHand)
+        for pair in pairs:
+            # checks if player can Hu, given every possible pair
+            for tile in pair:
+                currentHand.remove(tile)
+            if not Player.canHuGivenPair(currentHand):
+                currentHand += pair
+            else:
+                return True
+        return False
 
     def drawTile(self, deck):
         # take a random tile from the deck, adds to to player's hand
