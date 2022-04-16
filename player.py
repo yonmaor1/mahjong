@@ -152,6 +152,7 @@ class Player:
                 tiles = self.getChiTiles(tossedTile, tiles)
 
         self.revealed.append(tiles)
+        # BUG: one of the tiles isn't in hand because it's the tossed tile
         self.hand.remove(tiles[0])
         self.hand.remove(tiles[1])
         self.hand.remove(tiles[2])
@@ -223,7 +224,7 @@ class Player:
         # tosses a selected tile from player's hand
         tileToToss = input('What do you want to toss? Please input an index')
         
-        return self.hand.pop(tileToToss)
+        return self.hand.pop(int(tileToToss))
 
     def tossTileAI(self):
         # tosses a tile from AI player's hand
@@ -251,15 +252,17 @@ class Player:
             # if all tiles are in sets pick a random tile
             tileToToss = random.choice(self.hand)
 
-        return self.hand.pop(tileToToss)
+        self.hand.remove(tileToToss)
+
+        return tileToToss
 
 # should this be in mahjong.py?
 def giveHands(players, deck):
     # initializes players with hands
-    players[0].hand = getHand(deck)
-    players[1].hand = getHand(deck)
-    players[2].hand = getHand(deck)
-    players[3].hand = getHand(deck)
+    players[0].hand = sortHand(getHand(deck))
+    players[1].hand = sortHand(getHand(deck))
+    players[2].hand = sortHand(getHand(deck))
+    players[3].hand = sortHand(getHand(deck))
 
 def getHand(deck):
     # draws 16 random cards from the deck, then removes them from the deck
@@ -271,11 +274,39 @@ def getHand(deck):
 
     return hand
 
+def tupleSort(hand):
+    # modified merge sort from https://www.cs.cmu.edu/~112/notes/notes-recursion-part1.html#mergesort
+    def merge(A, B):
+        if ((len(A) == 0) or (len(B) == 0)):
+            return A+B
+        else:
+            if (A[0][0] < B[0][0]):
+                return [A[0]] + merge(A[1:], B)
+            else:
+                return [B[0]] + merge(A, B[1:])
+    
+    if (len(hand) < 2):
+        return hand
+    else:
+        mid = len(hand)//2
+        left = tupleSort(hand[:mid])
+        right = tupleSort(hand[mid:])
+        return merge(left, right)
+
+def nonSuitSort(hand):
+    sortedHand = []
+    for tile in hand:
+        if not tile in sortedHand:
+            sortedHand += [tile for i in range(hand.count(tile))]
+        
+    return sortedHand
+
+
 def sortHand(hand):
     # sorts hand by suite (not by value)
     nonSuits = []
     nums = []
-    dots = []
+    circles = []
     sticks = []
 
     for tile in hand:
@@ -283,10 +314,16 @@ def sortHand(hand):
             nonSuits.append(tile)
         elif tile[1] == 'number':
             nums.append(tile)
-        elif tile[1] == 'dot':
-            dots.append(tile)
+        elif tile[1] == 'circle':
+            circles.append(tile)
         elif tile[1] == 'stick':
             sticks.append(tile)
 
-    hand = nonSuits + nums + dots + sticks
-    return hand
+    nonSuits = nonSuitSort(nonSuits)
+    nums = tupleSort(nums)
+    circles = tupleSort(circles)
+    sticks = tupleSort(sticks)
+
+
+    sortedHand = nonSuits + nums + circles + sticks
+    return sortedHand

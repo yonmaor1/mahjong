@@ -1,13 +1,4 @@
-import pygame, socket, sys
-from pygame.locals import *
 from mahjong import *
-
-deck = getDeck()
-hand = sortHand(getHand(deck))
-yon = Player('yon', 0, False)
-yon.hand = hand
-print(sortHand(yon.hand))
-
 
 pygame.init()
 
@@ -22,6 +13,7 @@ screen.fill(WHITE)
 
 running = True
 
+# class to draw tiles
 class Tile:
     def __init__(self, value, suit, index):
         self.value = value
@@ -67,18 +59,29 @@ class Tile:
         surface.blit(self.image, (  margin + self.width * self.index, 
                                     HEIGHT - self.height - margin))
 
-while running:
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-    
-    # tile.update()
 
+def runGame():
+    players = initPlayers()
+    # BUG: active player will change after a round ends
+    activePlayer = players[0]
     screen.fill(WHITE)
-    for i in range(len(hand)):
-        tile = Tile(hand[i][0], hand[i][1], i)
+    for i in range(len(activePlayer.hand)):
+        # draw activePlayer's hand
+        tile = Tile(activePlayer.hand[i][0], activePlayer.hand[i][1], i)
         tile.draw(screen)
+    
+    deck, tossedTile, deadTiles, turn, dealer = firstTurn(players)
+    while True:
+        (deck, tossedTile, deadTiles, turn, dealer) = playRound(players,
+                                                                deck, 
+                                                                tossedTile, 
+                                                                deadTiles, 
+                                                                turn, 
+                                                                dealer)
+        
+        for i in range(len(activePlayer.hand)):
+            # draw activePlayer's hand
+            tile = Tile(activePlayer.hand[i][0], activePlayer.hand[i][1], i)
+            tile.draw(screen)
 
-    pygame.display.update()
-    FPS.tick(30)
+runGame()

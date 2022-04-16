@@ -1,11 +1,13 @@
 from player import *
+from pygame.locals import *
+import pygame, sys, random
 
 def getDeck():
     # returns a complete deck (still missing flowers / seasons)
     deck = []
     # populate the deck: siuted values are 1-9, 4 tiles of each
     for i in range(1,10):
-        deck += [(i, 'dot') for j in range(4)]
+        deck += [(i, 'circle') for j in range(4)]
     for i in range(1,10):
         deck += [(i, 'stick') for j in range(4)]
     for i in range(1,10):
@@ -58,10 +60,11 @@ def gameOver(players, tossedTile):
         return True
     return False
 
-def checkForAction(players, tossedTile):
+def checkForAction(players, tossedTile, turn):
     # called in playRound > while not gameOver()
     # check if players want to Kong / Pong
     for player in [ players[turn], players[(turn+1)%4], players[(turn+2)%4] ]:
+        action = None
         if player.canPong(tossedTile):
             # Kong if and only if Pong
             if player.canKong(tossedTile):
@@ -93,8 +96,7 @@ def checkForAction(players, tossedTile):
                 action = None
     return action, turn
 
-def playRound(players):
-    
+def firstTurn(players):
     # initializes game attributes
     deck = getDeck()
     deadTiles = []
@@ -107,29 +109,30 @@ def playRound(players):
     players[0].drawTile(deck)
     tossedTile = players[0].tossTile()
 
+    return deck, tossedTile, deadTiles, turn, dealer
+
+def playRound(players, deck, tossedTile, deadTiles, turn, dealer):
+
     # rest of the turns (a tossed tile exists)
-    while not gameOver(players, tossedTile):
+    if not gameOver(players, tossedTile):
 
         # to make sure player doesn't Stanley (pong / chi then draw a tile)
         action = None
 
         # check if anyone can Pong / Kong
         # if so, skip to their turn 
-        action, turn = checkForAction()
+        action, turn = checkForAction(players, tossedTile, turn)
         
         # if nobody Pongs/Kongs, check for Chi (only following player can Chi)
         nextPlayer = players[(turn + 1) % 4]
         if (action is None) and (nextPlayer.canChi(tossedTile)):
             if nextPlayer.isAI:
                 action = 'chi'
-                break
             else:
                 # input must be bool
                 wantsToChi = input(f'{nextPlayer.name} can Chi. Would you like to?')
-            
-            if wantsToChi:
-                action = 'chi'
-                break
+                if wantsToChi:
+                    action = 'chi'
 
         if action is None:
             # if no action happened, tile is now dead
@@ -138,31 +141,34 @@ def playRound(players):
         turn = (turn + 1) % 4
         tossedTile = playerTurn(players[turn], action, tossedTile, deck)
 
-    # somebody can Hu
-    for player in players:
-        if player.won:
-            winner = player
-            # whoever tossed out winning card is loser, unless winner drew card
-            # not using loser rn, might impliment betting / drinking  
-            losers = [ players[turn] ]
-            if losers[0] is winner:
-                losers = [   players[(turn + 1) % 4], 
-                            players[(turn + 2) % 4], 
-                            players[(turn + 3) % 4] ]
-            keepPlaying = input(f'{winner.name} won! Keep playing?')
-
-    if not keepPlaying:
-        return
-
-    if winner is dealer:
-        # if dealer won they stay dealer
-        playRound(players)
-
-    else:
-        # if dealer lost, player 1 becomes dealer
+    if gameOver(players, tossedTile):
+        # somebody can Hu
         for player in players:
-            player.num = (player.num + 1) % 4
-        playRound(players)
+            if player.won:
+                winner = player
+                # whoever tossed out winning card is loser, unless winner drew card
+                # not using loser rn, might impliment betting / drinking  
+                losers = [ players[turn] ]
+                if losers[0] is winner:
+                    losers = [  players[(turn + 1) % 4], 
+                                players[(turn + 2) % 4], 
+                                players[(turn + 3) % 4] ]
+                keepPlaying = input(f'{winner.name} won! Keep playing?')
+
+        if not keepPlaying:
+            # want to quit game
+            return
+
+        if winner is dealer:
+            # if dealer won they stay dealer
+            playRound(players)
+
+        else:
+            # if dealer lost, player 1 becomes dealer
+            for player in players:
+                player.num = (player.num + 1) % 4
+            playRound(players)
+    return deck, tossedTile, deadTiles, turn, dealer
 
 
 def playerTurn(player, action, tossedTile, deck):
@@ -188,8 +194,4 @@ def playerTurn(player, action, tossedTile, deck):
         tileToToss = player.tossTile()
     
     return tileToToss
-
-def startGame():
-    players = initPlayers()
-    playRound(players)
 
