@@ -23,7 +23,6 @@ class Player:
         self.revealed.append([tile, tile, tile])
         self.hand.remove(tile)
         self.hand.remove(tile)
-        self.hand.remove(tile)
 
     def canKong(self, tile):
         # returns True of player has 3 additional copies of the tossed tile in
@@ -36,7 +35,6 @@ class Player:
         # revelas the Kong and removes tiles from hand
         # tile is drawn in playerTurn 
         self.revealed.append([tile, tile, tile, tile])
-        self.hand.remove(tile)
         self.hand.remove(tile)
         self.hand.remove(tile)
         self.hand.remove(tile)
@@ -152,10 +150,13 @@ class Player:
                 tiles = self.getChiTiles(tossedTile, tiles)
 
         self.revealed.append(tiles)
-        # BUG: one of the tiles isn't in hand because it's the tossed tile
-        self.hand.remove(tiles[0])
-        self.hand.remove(tiles[1])
-        self.hand.remove(tiles[2])
+        # one of the tiles isn't in hand because it's the tossed tile
+        if tiles[0] in self.hand:
+            self.hand.remove(tiles[0])
+        if tiles[1] in self.hand:
+            self.hand.remove(tiles[1])
+        if tiles[2] in self.hand:
+            self.hand.remove(tiles[2])
 
     def findPairs(self, currentHand):
         # returns a list containing every pair in players hand
