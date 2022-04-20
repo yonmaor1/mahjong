@@ -13,36 +13,73 @@ class Player:
 
     def canPong(self, tile):
         # needs two (or three) additional copies of the tossed
-        # tile in hand 
-        if self.hand.count(tile) >= 2:
+        # tile in hand
+        tileRep = repr(tile)
+        count = 0
+        for tile in self.hand:
+            if repr(tile) == tileRep:
+                count += 1
+        
+        if count >= 2:
             return True
-        return False
+        else:
+            return False
 
-    def pong(self, tile):
+    def pong(self, tossedTile):
         # revels pong and removes tiles from hand
-        self.revealed.append([tile, tile, tile])
-        self.hand.remove(tile)
-        self.hand.remove(tile)
+        pong = [tossedTile]
+        for tile in self.hand:
+            if repr(tile) == repr(tossedTile):
+                pong.append(tile)
+            if len(pong) == 3:
+                break
+        
+        self.revealed.append(pong)
+        for tile in pong:
+            if tile in self.hand:
+                self.hand.remove(tile)
+
+        for i in range(len(self.hand)):
+            # move all the tiles back
+            self.hand[i].index = i
 
     def canKong(self, tile):
         # returns True of player has 3 additional copies of the tossed tile in
         # their hand 
-        if self.hand.count(tile) == 3:
+        tileRep = repr(tile)
+        count = 0
+        for tile in self.hand:
+            if repr(tile) == tileRep:
+                count += 1
+        
+        if count >= 3:
             return True
-        return False
+        else:
+            return False
     
-    def kong(self, tile):
+    def kong(self, tossedTile):
         # revelas the Kong and removes tiles from hand
         # tile is drawn in playerTurn 
-        self.revealed.append([tile, tile, tile, tile])
-        self.hand.remove(tile)
-        self.hand.remove(tile)
-        self.hand.remove(tile)
+        kong = [tossedTile]
+        for tile in self.hand:
+            if repr(tile) == repr(tossedTile):
+                kong.append(tile)
+            if len(kong) == 4:
+                break
+        
+        self.revealed.append(kong)
+        for tile in kong:
+            if tile in self.hand:
+                self.hand.remove(tile)
+
+        for i in range(len(self.hand)):
+            # move all the tiles back
+            self.hand[i].index = i
 
     def canChi(self, tile):
         # returns True of player has 3 consequtive tiles given the tossedTile
         
-        value, suit = tile[0], tile[1]
+        value, suit = tile.value, tile.suit
 
         # can only Chi with suit tiles
         if suit is None:
@@ -59,14 +96,12 @@ class Player:
     def isChi(tiles):
         # takes a [list] of 3 tiles, and returns True if they are consequtive
         # tiles of the same suit 
-        suits = [ tiles[0][1], tiles[1][1], tiles[2][1] ]
-        if (suits[0] == None or
-            suits[1] == None or
-            suits[2] == None):
+        suits = [ tile.suit for tile in tiles ]
+        if (None in suits):
             # can only Chi suit cards
             return False
 
-        values = [ tiles[0][0], tiles[1][0], tiles[2][0] ]
+        values = [ tile.value for tile in tiles ]
         values.sort()
         
         if ((suits[0] == suits[1] == suits[2]) and 
@@ -81,8 +116,8 @@ class Player:
         # takes a [list] of tiles and returns True if they are all consequtive
         # and share the same suit 
         for i in range(len(tiles) - 1):
-            if (tiles[i][0] + 1 != tiles[i+1][0] and 
-                tiles[i][1] != tiles[i+1][1]):
+            if (tiles[i].value + 1 != tiles[i+1].value and 
+                tiles[i].value != tiles[i+1].value):
                 return False
 
         return True
@@ -91,7 +126,7 @@ class Player:
     def isPong(tiles):
         # takes a [list] of tiles and returns True if the list contains 3 
         # identical tiles
-        if tiles[0] == tiles[1] == tiles[2]:
+        if repr(tiles[0]) == repr(tiles[1]) == repr(tiles[2]):
             return True
 
         return False
@@ -122,7 +157,7 @@ class Player:
     def getChiTilesAI(self, tossedTile):
         # destructivly modifies [list] tiles to contain the tiles
         # selected by mahjbot
-        value, suit = tossedTile[0], tossedTile[1]
+        value, suit = tossedTile.value, tossedTile.suit
         tiles = []
 
         if (value + 1, suit) and (value + 2, suit) in self.hand:
@@ -158,12 +193,21 @@ class Player:
         if tiles[2] in self.hand:
             self.hand.remove(tiles[2])
 
+        for i in range(len(self.hand)):
+            # move all the tiles back
+            self.hand[i].index = i
+
     def findPairs(self, currentHand):
         # returns a list containing every pair in players hand
         pairs = []
         for tile in currentHand:
-            if currentHand.count(tile) >= 2:
-                pairs.append([tile, tile])
+            currentPair = [tile]
+            tileRep = repr(tile)
+            for otherTile in currentHand:
+                if repr(tile) == tileRep and otherTile not in currentPair:
+                    currentPair.append(otherTile)
+                    pairs.append(currentPair)
+                    break
 
         return pairs
 
@@ -214,18 +258,23 @@ class Player:
     def drawTile(self, deck):
         # take a random tile from the deck, adds to to player's hand
         # then remove it from the deck
-        newTile = random.choice(deck)
-        self.hand.append(newTile)
-        deck.remove(newTile)
+        tile = random.choice(deck)
+        self.hand.append(tile)
+        tile.location = 'hand'
+        # add tile to end of hand
+        tile.index = len(self.hand)
+        deck.remove(tile)
 
-        print(f'Drawn Tile: {newTile}', end='')
+        print(f'Drawn Tile: {tile}', end='')
         print(f'Hand: {self.hand}')
 
-    def tossTile(self):
+    def tossTile(self, tile):
         # tosses a selected tile from player's hand
-        tileToToss = input('What do you want to toss? Please input an index')
-        
-        return self.hand.pop(int(tileToToss))
+        self.hand.remove(tile)
+        for i in range(len(self.hand)):
+            # move all the tiles back
+            self.hand[i].index = i
+        return tile
 
     def tossTileAI(self):
         # tosses a tile from AI player's hand
@@ -233,7 +282,7 @@ class Player:
 
         for tile in self.hand:
             # first check for a tile not in a pair
-            value, suit = tile[0], tile[1]
+            value, suit = tile.value, tile.suit
             if (self.hand.count(tile) >= 1):
                 continue
             elif (value + 1, suit) or (value - 1, suit) in self.hand:
@@ -255,9 +304,12 @@ class Player:
 
         self.hand.remove(tileToToss)
 
+        for i in range(len(self.hand)):
+            # move all the tiles back
+            self.hand[i].index = i
+
         return tileToToss
 
-# should this be in mahjong.py?
 def giveHands(players, deck):
     # initializes players with hands
     players[0].hand = sortHand(getHand(deck))
@@ -275,13 +327,13 @@ def getHand(deck):
 
     return hand
 
-def tupleSort(hand):
+def tileSort(hand):
     # modified merge sort from https://www.cs.cmu.edu/~112/notes/notes-recursion-part1.html#mergesort
     def merge(A, B):
         if ((len(A) == 0) or (len(B) == 0)):
             return A+B
         else:
-            if (A[0][0] < B[0][0]):
+            if (A[0].value < B[0].value):
                 return [A[0]] + merge(A[1:], B)
             else:
                 return [B[0]] + merge(A, B[1:])
@@ -290,8 +342,8 @@ def tupleSort(hand):
         return hand
     else:
         mid = len(hand)//2
-        left = tupleSort(hand[:mid])
-        right = tupleSort(hand[mid:])
+        left = tileSort(hand[:mid])
+        right = tileSort(hand[mid:])
         return merge(left, right)
 
 def nonSuitSort(hand):
@@ -311,19 +363,19 @@ def sortHand(hand):
     sticks = []
 
     for tile in hand:
-        if tile[1] == None:
+        if tile.suit == None:
             nonSuits.append(tile)
-        elif tile[1] == 'number':
+        elif tile.suit == 'number':
             nums.append(tile)
-        elif tile[1] == 'circle':
+        elif tile.suit == 'circle':
             circles.append(tile)
-        elif tile[1] == 'stick':
+        elif tile.suit == 'stick':
             sticks.append(tile)
 
     nonSuits = nonSuitSort(nonSuits)
-    nums = tupleSort(nums)
-    circles = tupleSort(circles)
-    sticks = tupleSort(sticks)
+    nums = tileSort(nums)
+    circles = tileSort(circles)
+    sticks = tileSort(sticks)
 
 
     sortedHand = nonSuits + nums + circles + sticks

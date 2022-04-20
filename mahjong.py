@@ -1,4 +1,5 @@
 from player import *
+from tile import *
 from pygame.locals import *
 import pygame, sys, random
 
@@ -7,45 +8,33 @@ def getDeck():
     deck = []
     # populate the deck: siuted values are 1-9, 4 tiles of each
     for i in range(1,10):
-        deck += [(i, 'circle') for j in range(4)]
+        deck += [Tile(i, 'circle', 'deck', None) for j in range(4)]
     for i in range(1,10):
-        deck += [(i, 'stick') for j in range(4)]
+        deck += [Tile(i, 'stick', 'deck', None) for j in range(4)]
     for i in range(1,10):
-        deck += [(i, 'number') for j in range(4)]
+        deck += [Tile(i, 'number', 'deck', None) for j in range(4)]
 
     # directions
-    deck += [('dung', None) for j in range(4)]
-    deck += [('nan', None) for j in range(4)]
-    deck += [('xi', None) for j in range(4)]
-    deck += [('bei', None) for j in range(4)]
+    deck += [Tile('dung', None, 'deck', None) for j in range(4)]
+    deck += [Tile('nan', None, 'deck', None) for j in range(4)]
+    deck += [Tile('xi', None, 'deck', None) for j in range(4)]
+    deck += [Tile('bei', None, 'deck', None) for j in range(4)]
 
     # dragons
-    deck += [('zhong', None) for j in range(4)]
-    deck += [('fa', None) for j in range(4)]
-    deck += [('box', None) for j in range(4)]
+    deck += [Tile('zhong', None, 'deck', None) for j in range(4)]
+    deck += [Tile('fa', None, 'deck', None) for j in range(4)]
+    deck += [Tile('box', None, 'deck', None) for j in range(4)]
 
     # add seasons / flowers later
 
     return deck
 
-def initPlayers():
+def initPlayers(player1Name):
     # creates 4 player objects, returns them in a list
-    player1Name = input('Enter Player 1s Name:')
-    player1isAI = input('Make Player 1 an AI?')
-
-    player2Name = input('Enter Player 2s Name:')
-    player2isAI = input('Make Player 2 an AI?')
-
-    player3Name = input('Enter Player 3s Name:')
-    player3isAI = input('Make Player 3 an AI?')
-
-    player4Name = input('Enter Player 4s Name:')
-    player4isAI = input('Make Player 4 an AI?')
-
-    player1 = Player(player1Name, 0, player1isAI)
-    player2 = Player(player2Name, 1, player2isAI)
-    player3 = Player(player3Name, 2, player3isAI)
-    player4 = Player(player4Name, 3, player4isAI)
+    player1 = Player(player1Name, 0, False)
+    player2 = Player('Mimi', 1, True)
+    player3 = Player('Sean', 2, True)
+    player4 = Player('Wesley', 3, True)
 
     players = [player1, player2, player3, player4]
 
@@ -96,7 +85,7 @@ def checkForAction(players, tossedTile, turn):
                 action = None
     return action, turn
 
-def firstTurn(players):
+def initGame(players):
     # initializes game attributes
     deck = getDeck()
     deadTiles = []
@@ -105,11 +94,15 @@ def firstTurn(players):
     # if dealer wins they stay dealer
     dealer = players[0]
 
+    return deck, deadTiles, turn, dealer
+
+def firstTurn(players, deck, deadTiles, turn):
+    
     # first turn (must draw new tile)
     players[0].drawTile(deck)
     tossedTile = players[0].tossTile()
 
-    return deck, tossedTile, deadTiles, turn, dealer
+    return deck, tossedTile, deadTiles, turn
 
 def playRound(players, deck, tossedTile, deadTiles, turn, dealer):
 
@@ -139,7 +132,7 @@ def playRound(players, deck, tossedTile, deadTiles, turn, dealer):
             deadTiles.append(tossedTile)
                 
         turn = (turn + 1) % 4
-        tossedTile = playerTurn(players[turn], action, tossedTile, deck)
+        # tossedTile = playerTurn(players[turn], action, tossedTile, deck)
 
     if gameOver(players, tossedTile):
         # somebody can Hu
@@ -168,7 +161,7 @@ def playRound(players, deck, tossedTile, deadTiles, turn, dealer):
             for player in players:
                 player.num = (player.num + 1) % 4
             playRound(players)
-    return deck, tossedTile, deadTiles, turn, dealer
+    return deck, tossedTile, action, deadTiles, turn, dealer
 
 
 def playerTurn(player, action, tossedTile, deck):
