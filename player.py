@@ -1,4 +1,6 @@
-import random
+from pygame.locals import *
+from tile import *
+from globals import *
 
 class Player:
     def __init__(self, name, num, isAI):
@@ -27,15 +29,12 @@ class Player:
 
     def pong(self, tossedTile):
         # revels pong and removes tiles from hand
-        pong = [tossedTile]
-        for tile in self.hand:
-            if repr(tile) == repr(tossedTile):
-                pong.append(tile)
-            if len(pong) == 3:
-                break
-        
+        print(f'{self.name} will pong')
+        pong = [tossedTile, tossedTile, tossedTile]
+
         self.revealed.append(pong)
         for tile in pong:
+            tile.location = 'revealed'
             if tile in self.hand:
                 self.hand.remove(tile)
 
@@ -60,15 +59,12 @@ class Player:
     def kong(self, tossedTile):
         # revelas the Kong and removes tiles from hand
         # tile is drawn in playerTurn 
-        kong = [tossedTile]
-        for tile in self.hand:
-            if repr(tile) == repr(tossedTile):
-                kong.append(tile)
-            if len(kong) == 4:
-                break
+        print(f'{self.name} will kong')
+        kong = [tossedTile, tossedTile, tossedTile, tossedTile]
         
         self.revealed.append(kong)
         for tile in kong:
+            tile.location = 'revealed'
             if tile in self.hand:
                 self.hand.remove(tile)
 
@@ -85,9 +81,9 @@ class Player:
         if suit is None:
             return False
         
-        if (((value - 1, suit) and (value - 2, suit)) in self.hand or 
-            ((value + 1, suit) and (value + 2, suit)) in self.hand or
-            ((value - 1, suit) and (value + 1, suit)) in self.hand):
+        if ((Tile(value - 1, suit) and Tile(value - 2, suit)) in self.hand or 
+            (Tile(value + 1, suit) and Tile(value + 2, suit)) in self.hand or
+            (Tile(value - 1, suit) and Tile(value + 1, suit)) in self.hand):
             return True
         
         return False
@@ -160,17 +156,19 @@ class Player:
         value, suit = tossedTile.value, tossedTile.suit
         tiles = []
 
-        if (value + 1, suit) and (value + 2, suit) in self.hand:
-            tiles = [ tossedTile, (value + 1, suit), (value + 2, suit) ]
-        elif (value - 1, suit) and (value - 2, suit) in self.hand:
-            tiles = [ tossedTile, (value - 1, suit), (value - 2, suit) ]
-        elif (value - 1, suit) and (value + 1, suit) in self.hand:
-            tiles = [ tossedTile, (value - 1, suit), (value + 1, suit) ]
+        if Tile(value + 1, suit) and Tile(value + 2, suit) in self.hand:
+            tiles = [ tossedTile, Tile(value + 1, suit), Tile(value + 2, suit) ]
+        elif Tile(value - 1, suit) and Tile(value - 2, suit) in self.hand:
+            tiles = [ tossedTile, Tile(value - 1, suit), Tile(value - 2, suit) ]
+        elif Tile(value - 1, suit) and Tile(value + 1, suit) in self.hand:
+            tiles = [ tossedTile, Tile(value - 1, suit), Tile(value + 1, suit) ]
     
         return tiles
 
     def chi(self, tossedTile):
         # gets selected tiles, revels them and removes them from hand
+        print(f'{self.name} will chi')
+
         tiles = []
 
         if self.isAI:
@@ -185,6 +183,8 @@ class Player:
                 tiles = self.getChiTiles(tossedTile, tiles)
 
         self.revealed.append(tiles)
+        for tile in tiles:
+            tile.location = 'revealed'
         # one of the tiles isn't in hand because it's the tossed tile
         if tiles[0] in self.hand:
             self.hand.remove(tiles[0])
@@ -214,7 +214,7 @@ class Player:
     @ staticmethod
     def canHuGivenPair(currentHand, sets = []):
         # takes a hand, excluding a pair, and returns true of the hand can be
-        # arranged entirely into sets of 3 (backtracking)
+        # arranged entirely into sets of 3 (backtracking!!!)
         
         if len(currentHand) == 0:
                 return True
@@ -244,6 +244,8 @@ class Player:
     def canHu(self, tossedTile):
         # checks if player can Hu (win the game)
         currentHand = self.hand + [tossedTile]
+        # print(currentHand)
+        # print(len(currentHand))
         pairs = self.findPairs(currentHand)
         for pair in pairs:
             # checks if player can Hu, given every possible pair
@@ -258,23 +260,51 @@ class Player:
     def drawTile(self, deck):
         # take a random tile from the deck, adds to to player's hand
         # then remove it from the deck
-        tile = random.choice(deck)
-        self.hand.append(tile)
+        tile = deck.pop(0)
         tile.location = 'hand'
-        # add tile to end of hand
-        tile.index = len(self.hand)
-        deck.remove(tile)
+        tile.theta = 90 * self.num
+        if tile.suit == 'season' or tile.suit == 'flower':
+            self.tossTile(tile)
+            tile = self.drawTileFromBack(deck)
 
-        print(f'Drawn Tile: {tile}', end='')
-        print(f'Hand: {self.hand}')
+        return tile
+
+        # print(f'Drawn Tile: {tile}', end='')
+        # print(f'Hand: {self.hand}')
+
+    def drawTileFromBack(self, deck):
+        tile = deck.pop()
+        tile.location = 'hand'
+        if tile.suit == 'season' or tile.suit == 'flower':
+            self.tossTile(tile)
+            tile = self.drawTileFromBack(deck)
+
+        return tile
 
     def tossTile(self, tile):
         # tosses a selected tile from player's hand
         self.hand.remove(tile)
+        tile.location = 'tossed'
         for i in range(len(self.hand)):
             # move all the tiles back
             self.hand[i].index = i
+                
         return tile
+
+    def getTossedTile(self, drawnTile):
+        # check for mouse press to toss tile
+        tossedTile = None
+        while tossedTile is None:
+            for event in pygame.event.get():
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        pos = pygame.mouse.get_pos()
+                        for tile in self.hand:
+                            if tile.rect.collidepoint(pos):
+                                tossedTile = tile
+                                return tossedTile
+                        if drawnTile.rect.collidepoint(pos):
+                                tossedTile = drawnTile
+                                return tossedTile
 
     def tossTileAI(self):
         # tosses a tile from AI player's hand
@@ -285,9 +315,9 @@ class Player:
             value, suit = tile.value, tile.suit
             if (self.hand.count(tile) >= 1):
                 continue
-            elif (value + 1, suit) or (value - 1, suit) in self.hand:
+            elif Tile(value + 1, suit) or Tile(value - 1, suit) in self.hand:
                 continue
-            elif (value + 2, suit) or (value - 2, suit) in self.hand:
+            elif Tile(value + 2, suit) or Tile(value - 2, suit) in self.hand:
                 continue
             tileToToss = tile
 
@@ -308,6 +338,8 @@ class Player:
             # move all the tiles back
             self.hand[i].index = i
 
+        print(tileToToss)
+        tileToToss.location = 'tossed'
         return tileToToss
 
 def giveHands(players, deck):
@@ -317,13 +349,35 @@ def giveHands(players, deck):
     players[2].hand = sortHand(getHand(deck))
     players[3].hand = sortHand(getHand(deck))
 
+    for player in players:
+        print(len(player.hand))
+
+def replaceFlowers(players, deck):
+    # make sure player doesn't have seasons or flowers
+    for player in players:
+        print(len(player.hand))
+        season = Tile(None, 'season', 'deck', None)
+        flower = Tile(None, 'flower', 'deck', None)
+        while season in player.hand:
+            player.tossTile(season)
+            tile = player.drawTileFromBack(deck)
+            player.hand.append(tile)
+
+        
+        while flower in player.hand:
+            player.tossTile(flower)
+            tile = player.drawTileFromBack(deck)
+            player.hand.append(tile)
+
+    return players
+
 def getHand(deck):
     # draws 16 random cards from the deck, then removes them from the deck
     hand = []
     while len(hand) < 16:
-        newTile = random.choice(deck)
-        hand.append(newTile)
-        deck.remove(newTile)
+        tile = deck.pop(0)
+        hand.append(tile)
+        tile.location = 'hand'
 
     return hand
 

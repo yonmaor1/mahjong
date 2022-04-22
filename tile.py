@@ -1,67 +1,90 @@
 from pygame.locals import *
-import pygame, sys, random
-WIDTH, HEIGHT = 800, 800
+from globals import *
 
-# class to draw tiles
+# class to draw tile
 class Tile:
-    def __init__(self, value, suit, location, index):
+    def __init__(self, value, suit, location = None, index = None):
         self.value = value
         self.suit = suit
         self.location = location
         self.index = index
 
-        if self.suit is None:
-            self.imgRef = f'img/{self.value}.jpg'
-        else:
-            self.imgRef = f'img/{self.value}{self.suit}.jpg'
-        self.image = pygame.image.load(self.imgRef)
-        self.scaleFactor = 44/36 # height to width ratio
-        self.width = 45
-        self.size = self.width, self.width * self.scaleFactor
-        self.width, self.height = self.size
-        self.image = pygame.transform.scale(self.image, self.size)
+        if type(value) == int:
+            if value < 1 or value > 9:
+            # this fixes a bug in canChi, where the program crashed when it
+            # tries to find a Tile smaller then 1 or greater then 9 
+                return
 
-        # location
-        '''margin = (WIDTH - self.width * 16) / 2
-        if self.location == 'hand':
-            self.x, self.y = (  margin + self.width * self.index, 
-                                HEIGHT - self.height - margin)
-        elif self.location == 'revealed':
-            # offset to space out each set
-            offset = 10 * (index // 3)
-            self.x, self.y = (  margin + offset + self.width * index, 
-                                HEIGHT - 2.2*self.height - margin)
+        if self.location == 'deck':
+            self.imgRef = 'img/blank.PNG'
+        elif self.suit is None:
+            self.imgRef = f'img/{self.value}.PNG'
         else:
-            self.x, self.y = (0, 0)'''
+            self.imgRef = f'img/{self.value}{self.suit}.PNG'
+        
+        self.image = pygame.image.load(self.imgRef)
+        self.scaleFactor = tileRatio # height to width ratio
+        self.width = tileWidth
+        self.height = tileHeight
+        self.size = self.width, self.height
+        self.width, self.height = self.size
+        self.depth = tileDepth
+        self.image = pygame.transform.scale(self.image, self.size)
         
         self.x, self.y = 0, 0
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
+        self.theta = 0
+
     def __repr__(self):
         return f'({self.value}, {self.suit})'
+
+    def __eq__(self, other):
+        if not isinstance(other, Tile):
+            return False
+        return self.value == other.value and self.suit == other.suit
 
     def tup(self):
         return (self.value, self)
 
     def update(self):
-        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+
+        if self.location == 'passiveHand':
+            self.imgRef = 'img/topView.PNG'
+            self.rect = pygame.Rect(self.x, self.y, self.width, self.depth)
+            self.size = self.width, self.depth
+        elif self.location != 'passiveHand':
+            self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
+            self.size = self.width, self.height
+        
+        if self.location != 'passiveHand':
+            if self.location == 'deck' or self.suit == 'flower':
+                self.imgRef = 'img/blank.PNG'
+            elif self.suit is None:
+                self.imgRef = f'img/{self.value}.PNG'
+            else:
+                self.imgRef = f'img/{self.value}{self.suit}.PNG'
+
+        if self.location == 'tossed':
+            self.theta = 0
+        
         self.image = pygame.image.load(self.imgRef)
         self.image = pygame.transform.scale(self.image, self.size)
+        self.image = pygame.transform.rotate(self.image, self.theta)
     
     def draw(self, surface):
         pygame.transform.scale(self.image, self.size)
+        pygame.transform.rotate(self.image, self.theta)
         surface.blit(self.image, (self.x,self.y))
 
     
     def drawInHand(self, surface):
         pygame.transform.scale(self.image, self.size)
-        margin = (WIDTH - self.width * 16) / 2
-        surface.blit(self.image, (  margin + self.width * self.index, 
-                                    HEIGHT - self.height - margin))
+        surface.blit(self.image, (  MARGIN + self.width * self.index, 
+                                    HEIGHT - self.height - MARGIN))
 
     def drawInRevealed(self, surface):
         pygame.transform.scale(self.image, self.size)
-        margin = (WIDTH - self.width * 16) / 2
-        surface.blit(self.image, (  margin + self.width * self.index, 
-                                    HEIGHT - 2.2*self.height - margin))
+        surface.blit(self.image, (  MARGIN + self.width * self.index, 
+                                    HEIGHT - 2.2*self.height - MARGIN))
 

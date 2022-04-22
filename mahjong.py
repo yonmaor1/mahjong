@@ -1,7 +1,6 @@
 from player import *
-from tile import *
-from pygame.locals import *
-import pygame, sys, random
+from globals import *
+from displays import *
 
 def getDeck():
     # returns a complete deck (still missing flowers / seasons)
@@ -25,8 +24,19 @@ def getDeck():
     deck += [Tile('fa', None, 'deck', None) for j in range(4)]
     deck += [Tile('box', None, 'deck', None) for j in range(4)]
 
-    # add seasons / flowers later
+    # seasons / flowers
+    # deck += [Tile(None, 'flower', 'deck', None) for j in range(4)]
+    # deck += [Tile(None, 'season', 'deck', None) for j in range(4)]
 
+    random.shuffle(deck)
+
+    for i in range(0, len(deck[:-1]), 2):
+        topTile = deck[i]
+        bottomTile = deck[i+1]
+        topTile.index = bottomTile.index = (i // 2) % stacksPerSide
+        topTile.side = bottomTile.side = (i // 2) // stacksPerSide
+
+    print(len(deck))
     return deck
 
 def initPlayers(player1Name):
@@ -50,8 +60,10 @@ def gameOver(players, tossedTile):
     return False
 
 def checkForAction(players, tossedTile, turn):
-    # called in playRound > while not gameOver()
+    # called in endTurn > while not gameOver()
     # check if players want to Kong / Pong
+    wantsToPong = wantsToKong = False
+
     for player in [ players[turn], players[(turn+1)%4], players[(turn+2)%4] ]:
         action = None
         if player.canPong(tossedTile):
@@ -93,6 +105,8 @@ def initGame(players):
     giveHands(players, deck)
     # if dealer wins they stay dealer
     dealer = players[0]
+    # for debugging
+    # players[2].revealed = [ [ Tile('fa', None), Tile('fa', None), Tile('fa', None) ] ]
 
     return deck, deadTiles, turn, dealer
 
@@ -104,38 +118,78 @@ def firstTurn(players, deck, deadTiles, turn):
 
     return deck, tossedTile, deadTiles, turn
 
-def playRound(players, deck, tossedTile, deadTiles, turn, dealer):
+def endTurn(players, deck, tossedTile, deadTiles, turn, dealer):
 
-    # rest of the turns (a tossed tile exists)
-    if not gameOver(players, tossedTile):
+    # to make sure player doesn't Stanley (pong / chi then draw a tile)
+    action = None
 
-        # to make sure player doesn't Stanley (pong / chi then draw a tile)
-        action = None
-
-        # check if anyone can Pong / Kong
-        # if so, skip to their turn 
-        action, turn = checkForAction(players, tossedTile, turn)
-        
-        # if nobody Pongs/Kongs, check for Chi (only following player can Chi)
-        nextPlayer = players[(turn + 1) % 4]
-        if (action is None) and (nextPlayer.canChi(tossedTile)):
-            if nextPlayer.isAI:
+    # check if anyone can Pong / Kong
+    # if so, skip to their turn 
+    action, turn = checkForAction(players, tossedTile, turn)
+    
+    # if nobody Pongs/Kongs, check for Chi (only following player can Chi)
+    # BUG: chi doesn't work. commented out for now
+    nextPlayer = players[(turn + 1) % 4]
+    '''if (action is None) and (nextPlayer.canChi(tossedTile)):
+        if nextPlayer.isAI:
+            action = 'chi'
+        else:
+            # input must be bool
+            wantsToChi = input(f'{nextPlayer.name} can Chi. Would you like to?')
+            if wantsToChi:
                 action = 'chi'
-            else:
-                # input must be bool
-                wantsToChi = input(f'{nextPlayer.name} can Chi. Would you like to?')
-                if wantsToChi:
-                    action = 'chi'
+    '''
 
-        if action is None:
-            # if no action happened, tile is now dead
-            deadTiles.append(tossedTile)
-                
-        turn = (turn + 1) % 4
-        # tossedTile = playerTurn(players[turn], action, tossedTile, deck)
+    if action is None:
+        # if no action happened, tile is now dead
+        deadTiles.append(tossedTile)
+            
+    turn = (turn + 1) % 4
 
-    if gameOver(players, tossedTile):
-        # somebody can Hu
+    return deck, tossedTile, action, deadTiles, turn, dealer
+
+def startTurn(player, action, tossedTile, deck):
+    # performs one turn. Only gets called if no Hu can occur
+
+    # dont let player Stanley (draw a tile if they performed an action)
+    if action == 'pong':
+        player.pong(tossedTile)
+        drawnTile = None
+    elif action == 'kong':
+        # Kong draws tile from the back 
+        player.kong(tossedTile)
+        drawnTile = player.drawTile(deck)
+    elif action == 'chi':
+        player.chi(tossedTile)
+        drawnTile = None
+    else:
+        drawnTile = player.drawTile(deck)
+
+    return drawnTile, deck
+    
+    
+def middleTurn(player, drawnTile, deadTiles, screen):
+    # must toss tile
+    if player.isAI:
+        tileToToss = player.tossTileAI()
+    else:
+        tileToToss = player.getTossedTile(drawnTile)
+        if tileToToss != drawnTile:
+            player.tossTile(tileToToss)
+
+    displayTossed(tileToToss, deadTiles, screen)
+    pygame.display.update()
+    time.sleep(0.5)
+    
+    if tileToToss != drawnTile and tileToToss != None:
+        # only now add the drawn tile to the hand (if it wasn't thrown out)
+        player.hand.append(drawnTile)
+    
+    return tileToToss
+
+
+def endGame(players, turn, dealer):
+    # somebody can Hu
         for player in players:
             if player.won:
                 winner = player
@@ -152,39 +206,13 @@ def playRound(players, deck, tossedTile, deadTiles, turn, dealer):
             # want to quit game
             return
 
+        # BUG: reset must happen in game.py
         if winner is dealer:
             # if dealer won they stay dealer
-            playRound(players)
+            endTurn(players)
 
         else:
             # if dealer lost, player 1 becomes dealer
             for player in players:
                 player.num = (player.num + 1) % 4
-            playRound(players)
-    return deck, tossedTile, action, deadTiles, turn, dealer
-
-
-def playerTurn(player, action, tossedTile, deck):
-    # performs one turn. Only gets called if no Hu can occur
-
-    # dont let player draw a tile if they performed an action
-    if action == 'pong':
-        player.pong(tossedTile)
-    elif action == 'kong':
-        # Kong draws tile from the back 
-        player.kong(tossedTile)
-        player.drawTile(deck)
-    elif action == 'chi':
-        player.chi(tossedTile)
-    
-    else:
-        player.drawTile(deck)
-    
-    # must toss tile
-    if player.isAI:
-        tileToToss = player.tossTileAI()
-    else:
-        tileToToss = player.tossTile()
-    
-    return tileToToss
-
+            endTurn(players)
