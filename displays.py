@@ -2,9 +2,14 @@ from tile import *
 from globals import *
 
 def displayHand(hand, screen):
-    # print(len(hand))
     for i in range(len(hand)):
         tile = hand[i]
+
+        # same fix as in displayOtherHands, still bad
+        if tile is None:
+                hand.remove(tile)
+                i -= 1
+                continue
         
         tile.x, tile.y = (  MARGIN + tile.width * i, 
                             HEIGHT - tile.height - MARGIN)
@@ -13,8 +18,9 @@ def displayHand(hand, screen):
         tile.draw(screen)
 
 def displayDrawn(tile, hand, screen):
-    tile.x, tile.y = (  MARGIN + len(hand) * tile.width + MARGIN, 
+    xFinal, yFinal = (  MARGIN + len(hand) * tile.width + MARGIN, 
                         HEIGHT - tile.height - MARGIN)
+    tile.slideTile(screen, xFinal, yFinal)
 
     tile.update()
     tile.draw(screen)
@@ -24,9 +30,11 @@ def displayRevealed(revealed, screen):
     for set in revealed:
         for i in range(len(set)):
             tile = set[i]
+            tile.location = 'revealed'
             offset = 10 * (index // 3)
-            tile.x, tile.y = (  MARGIN + offset + tile.width * index, 
+            xFinal, yFinal = (  MARGIN + offset + tile.width * index, 
                                 HEIGHT - 2.2*tile.height - MARGIN)
+            tile.slideTile(screen, xFinal, yFinal)
             
             tile.update()
             tile.draw(screen)
@@ -39,8 +47,9 @@ def displayDead(deadTiles, screen):
 
     for i in range(len(deadTiles)):
         tile = deadTiles[i]
-        tile.x, tile.y = (  deadX + (i % tilesPerRow) * tileWidth, 
+        xFinal, yFinal = (  deadX + (i % tilesPerRow) * tileWidth, 
                             deadY + (i // tilesPerRow) * tileHeight)
+        tile.slideTile(screen, xFinal, yFinal)
         
         tile.update()
         tile.draw(screen)
@@ -48,8 +57,9 @@ def displayDead(deadTiles, screen):
 def displayTossed(tile, deadTiles, screen):
     deadX, deadY = (WIDTH - MARGIN - rowLength + MARGIN, 
                     HEIGHT - stacksPerSide * tileWidth)
-    tile.x, tile.y = (  deadX + (len(deadTiles) % tilesPerRow) * tileWidth + 10, 
+    xFinal, yFinal = (  deadX + (len(deadTiles) % tilesPerRow) * tileWidth + 10, 
                         deadY + (len(deadTiles) // tilesPerRow) * tileHeight + 10)
+    tile.slideTile(screen, xFinal, yFinal)
 
     tile.update()
     tile.draw(screen)
@@ -61,23 +71,34 @@ def displayOtherHands(players, activePlayer, screen):
         playerNum = passivePlayers.index(player) + 1
         for i in range(len(player.hand)):
             tile = player.hand[i]
+
+            # BUG: when player tries to pong / chi draw tile is Nonetype
+            # horrendous fix to this bug...
+            if tile is None:
+                player.hand.remove(tile)
+                i -= 1
+                continue
+
             tile.theta = playerNum * 90
             tile.location = 'passiveHand'
             if playerNum == 1:
-                tile.x, tile.y = (  WIDTH - MARGIN - tileDepth, 
+                xFinal, yFinal = (  WIDTH - MARGIN - tileDepth, 
                                     HEIGHT - MARGIN - i * tileWidth - tileWidth)
+                tile.slideTile(screen, xFinal, yFinal)
 
                 tile.update()
                 tile.draw(screen)
             elif playerNum == 2:
-                tile.x, tile.y = (  WIDTH - MARGIN - i * tileWidth - tileWidth, 
+                xFinal, yFinal = (  WIDTH - MARGIN - i * tileWidth - tileWidth, 
                                     MARGIN)
+                tile.slideTile(screen, xFinal, yFinal)
 
                 tile.update()
                 tile.draw(screen)
             elif playerNum == 3:
-                tile.x, tile.y = (  MARGIN, 
+                xFinal, yFinal = (  MARGIN, 
                                     MARGIN + i * tileWidth)
+                tile.slideTile(screen, xFinal, yFinal)
 
                 tile.update()
                 tile.draw(screen)
@@ -87,37 +108,37 @@ def displayOtherRevealed(players, activePlayer, screen):
     passivePlayers = [ players[(num+1)%4], players[(num+2)%4], players[(num+3)%4] ]
     for player in passivePlayers:
         playerNum = passivePlayers.index(player) + 1
-        index = 0
+        tileIndex = 0
         for set in player.revealed:
+            setIndex = player.revealed.index(set)
             for i in range(len(set)):
                 tile = set[i]
                 tile.theta = playerNum * 90
-                offset = 10 * (index // 3)
+                offset = 10 * setIndex
 
                 if playerNum == 1:
-                    tile.x, tile.y = (  WIDTH - MARGIN - 2*tileDepth - tileHeight, 
-                                        HEIGHT - MARGIN - i * tileWidth - tileWidth)
+                    xFinal, yFinal = (  WIDTH - MARGIN - 2 * tileDepth - tileHeight, 
+                                        HEIGHT - MARGIN - tileIndex * tileWidth - tileWidth - offset)
+                    tile.slideTile(screen, xFinal, yFinal)
 
                     tile.update()
                     tile.draw(screen)
                 elif playerNum == 2:
-                    tile.x, tile.y = (  WIDTH - MARGIN - i * tileWidth - tileWidth, 
-                                        MARGIN + 2*tileDepth)
+                    xFinal, yFinal = (  WIDTH - MARGIN - tileIndex * tileWidth - tileWidth - offset, 
+                                        MARGIN + 2 * tileDepth)
+                    tile.slideTile(screen, xFinal, yFinal)
 
                     tile.update()
                     tile.draw(screen)
                 elif playerNum == 3:
-                    tile.x, tile.y = (  MARGIN + 2*tileDepth, 
-                                        MARGIN + i * tileWidth)
+                    xFinal, yFinal = (  MARGIN + 2 * tileDepth, 
+                                        MARGIN + tileIndex * tileWidth + offset)
+                    tile.slideTile(screen, xFinal, yFinal)
 
                     tile.update()
                     tile.draw(screen)
-
-                tile.x, tile.y = (  MARGIN + offset + tile.width * index, 
-                                    HEIGHT - 2.2*tile.height - MARGIN)
-                
             
-                index += 1
+                tileIndex += 1
 
 def displayDeck(deck, screen):
     for i in range(0, len(deck[:-1]), 2):
@@ -125,8 +146,6 @@ def displayDeck(deck, screen):
         bottomTile = deck[i+1]
 
         if topTile.side == 0:
-            # print('side 0:', end='')
-            # print(topTile.index)
             x, y = (MARGIN + topTile.width * topTile.index, 
                     HEIGHT - topTile.height * 2 - MARGIN * 3)
 
@@ -136,8 +155,6 @@ def displayDeck(deck, screen):
             bottomTile.draw(screen)
 
         if topTile.side == 1:
-            # print('side 1:', end='')
-            # print(topTile.index)
             topTile.theta = 90
             bottomTile.theta = 90
 
@@ -153,8 +170,6 @@ def displayDeck(deck, screen):
             bottomTile.draw(screen)
 
         if topTile.side == 2:
-            # print('side 2:', end='')
-            # print(topTile.index)
             topTile.theta = 180
             bottomTile.theta = 180
 
@@ -169,13 +184,11 @@ def displayDeck(deck, screen):
             bottomTile.draw(screen)
 
         if topTile.side == 3:
-            # print('side 3:', end='')
-            # print(topTile.index)
             topTile.theta = 270
             bottomTile.theta = 270
 
-            x, y = (WIDTH - MARGIN - rowLength - topTile.height,
-                    MARGIN + (topTile.width * topTile.index) )
+            x, y = (WIDTH - MARGIN - rowLength - tileHeight,
+                    MARGIN + (tileWidth * topTile.index) )
             topTile.x, topTile.y = bottomTile.x, bottomTile.y = x, y
             
             topTile.update()
@@ -234,3 +247,103 @@ def getActiveName(screen):
         # Blit the inputBox rect.
         pygame.draw.rect(screen, color, inputBox, 2)
         pygame.display.update()
+
+def chatBox(text, screen):
+    fontHeight = 32
+    font = pygame.font.Font(None, fontHeight)
+    prompt = 'CHAT:'
+    inputW, inputH = SIDEBAR - 2*MARGIN, SIDEBAR - MARGIN
+    inputBox = pygame.Rect(WIDTH + MARGIN, 2*MARGIN, inputW, inputH)
+    color = (140,140,140)
+    text = f'>>>{text}'
+
+    pygame.draw.rect(screen, color, inputBox)
+
+    # Render the current text.
+    textSurface = font.render(text, True, WHITE)
+    promptSurface = font.render(prompt, True, color)
+    
+    # Blit the text.
+    screen.blit(promptSurface, (inputBox.x, inputBox.y - fontHeight))
+    screen.blit(textSurface, (inputBox.x+5, inputBox.y+5))
+    # Blit the inputBox rect.
+    pygame.draw.rect(screen, color, inputBox, 2)
+    pygame.display.update()
+
+def displayButtons(player, tossedTile, turn, screen):
+    buttonWidth = SIDEBAR - 2*MARGIN
+    buttonHeight = 3*MARGIN
+
+    passButton = pygame.Rect( WIDTH + MARGIN, HEIGHT - 1*(MARGIN + buttonHeight), 
+                            buttonWidth, buttonHeight)
+    huButton = pygame.Rect( WIDTH + MARGIN, HEIGHT - 2*(MARGIN + buttonHeight), 
+                            buttonWidth, buttonHeight)
+    chiButton = pygame.Rect(WIDTH + MARGIN, HEIGHT - 3*(MARGIN + buttonHeight), 
+                            buttonWidth, buttonHeight)
+    kongButton = pygame.Rect(WIDTH + MARGIN, HEIGHT - 4*(MARGIN + buttonHeight), 
+                            buttonWidth, buttonHeight)
+    pongButton = pygame.Rect(WIDTH + MARGIN, HEIGHT - 5*(MARGIN + buttonHeight), 
+                            buttonWidth, buttonHeight)
+
+    rects = [ pongButton, kongButton, chiButton, huButton, passButton ]
+
+    fontHeight = buttonHeight - 4
+    font = pygame.font.Font(None, fontHeight)
+    
+    pongText = font.render('pong', True, WHITE)
+    kongText = font.render('kong', True, WHITE)
+    chiText = font.render('chi', True, WHITE)
+    huText = font.render('hu', True, WHITE)
+    passText = font.render('pass', True, WHITE)
+
+    texts = [ pongText, kongText, chiText, huText, passText ]
+
+    if tossedTile is None:
+        booleans = [ False, False, False, False, False ]
+    else:
+        playerTurn = player.num
+        canChi = player.canChi(tossedTile) and turn == playerTurn
+
+        booleans = [player.canPong(tossedTile), player.canKong(tossedTile), 
+                    canChi, player.canHu(tossedTile)]
+        canPass = (turn == playerTurn) and (True in booleans)
+        booleans.append(canPass)
+    
+    for i in range(len(rects)):
+        rect = rects[i]
+        text = texts[i]
+
+        if booleans[i]:
+            color = GREEN
+        else:
+            color = (140,140,140)
+
+        pygame.draw.rect(screen, color, rect, 0, 5)
+        screen.blit(text, (rect.x+5, rect.y+5))
+
+    return rects, booleans
+
+def getAction(rects, booleans):
+    actions = [ 'pong', 'kong', 'chi', 'hu', False ]
+    # if player wants to pass, action is False
+    action = None
+    while action is None:
+        for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    for i in range(len(rects)):
+                        button = rects[i]
+                        canAction = booleans[i]
+                        # If the user clicked on the inputBox rect.
+                        if button.collidepoint(event.pos) and canAction:
+                            # Toggle the active variable.
+                            action = actions[i]
+                            return action
+
+def displaySidebar(screen, text=''):
+    sideBar = pygame.Rect(WIDTH, 0, SIDEBAR, HEIGHT)
+    pygame.draw.rect(screen, WHITE, sideBar)
+    chatBox(text, screen)
+    pygame.display.update()

@@ -16,13 +16,7 @@ class Player:
     def canPong(self, tile):
         # needs two (or three) additional copies of the tossed
         # tile in hand
-        tileRep = repr(tile)
-        count = 0
-        for tile in self.hand:
-            if repr(tile) == tileRep:
-                count += 1
-        
-        if count >= 2:
+        if self.hand.count(tile) >= 2:
             return True
         else:
             return False
@@ -35,6 +29,7 @@ class Player:
         self.revealed.append(pong)
         for tile in pong:
             tile.location = 'revealed'
+            tile.update()
             if tile in self.hand:
                 self.hand.remove(tile)
 
@@ -45,13 +40,7 @@ class Player:
     def canKong(self, tile):
         # returns True of player has 3 additional copies of the tossed tile in
         # their hand 
-        tileRep = repr(tile)
-        count = 0
-        for tile in self.hand:
-            if repr(tile) == tileRep:
-                count += 1
-        
-        if count >= 3:
+        if self.hand.count(tile) == 3:
             return True
         else:
             return False
@@ -65,6 +54,7 @@ class Player:
         self.revealed.append(kong)
         for tile in kong:
             tile.location = 'revealed'
+            tile.update()
             if tile in self.hand:
                 self.hand.remove(tile)
 
@@ -81,9 +71,14 @@ class Player:
         if suit is None:
             return False
         
-        if ((Tile(value - 1, suit) and Tile(value - 2, suit)) in self.hand or 
-            (Tile(value + 1, suit) and Tile(value + 2, suit)) in self.hand or
-            (Tile(value - 1, suit) and Tile(value + 1, suit)) in self.hand):
+        if (tile - 1  in self.hand and tile - 2 in self.hand):
+            print(f'{tile - 1}, {tile - 2}')
+            return True
+        elif (tile + 1  in self.hand and tile + 2 in self.hand):
+            print(f'{tile + 1}, {tile + 2}')
+            return True
+        elif (tile - 1  in self.hand and tile + 1 in self.hand):
+            print(f'{tile - 1}, {tile + 1}')
             return True
         
         return False
@@ -153,45 +148,31 @@ class Player:
     def getChiTilesAI(self, tossedTile):
         # destructivly modifies [list] tiles to contain the tiles
         # selected by mahjbot
-        value, suit = tossedTile.value, tossedTile.suit
         tiles = []
 
-        if Tile(value + 1, suit) and Tile(value + 2, suit) in self.hand:
-            tiles = [ tossedTile, Tile(value + 1, suit), Tile(value + 2, suit) ]
-        elif Tile(value - 1, suit) and Tile(value - 2, suit) in self.hand:
-            tiles = [ tossedTile, Tile(value - 1, suit), Tile(value - 2, suit) ]
-        elif Tile(value - 1, suit) and Tile(value + 1, suit) in self.hand:
-            tiles = [ tossedTile, Tile(value - 1, suit), Tile(value + 1, suit) ]
+        if tossedTile + 1 in self.hand and tossedTile + 2 in self.hand:
+            tiles = [ tossedTile, tossedTile + 1, tossedTile + 2 ]
+        elif tossedTile - 1  in self.hand and tossedTile - 2 in self.hand:
+            tiles = [ tossedTile, tossedTile - 1, tossedTile - 2 ]
+        elif tossedTile - 1 in self.hand and tossedTile + 1 in self.hand:
+            tiles = [ tossedTile, tossedTile - 1, tossedTile + 1 ]
+
+        print(sorted(tiles))
     
-        return tiles
+        return sorted(tiles)
 
     def chi(self, tossedTile):
         # gets selected tiles, revels them and removes them from hand
         print(f'{self.name} will chi')
 
-        tiles = []
+        chi = self.getChiTilesAI(tossedTile)
 
-        if self.isAI:
-            tiles = self.getChiTilesAI(tossedTile)
-        
-        else:
-            tiles = self.getChiTiles(tossedTile, tiles)
-
-            while not ( Player.isChi(tiles) ):
-                print('These tiles dont form a set', end='')
-                
-                tiles = self.getChiTiles(tossedTile, tiles)
-
-        self.revealed.append(tiles)
-        for tile in tiles:
+        self.revealed.append(chi)
+        for tile in chi:
             tile.location = 'revealed'
-        # one of the tiles isn't in hand because it's the tossed tile
-        if tiles[0] in self.hand:
-            self.hand.remove(tiles[0])
-        if tiles[1] in self.hand:
-            self.hand.remove(tiles[1])
-        if tiles[2] in self.hand:
-            self.hand.remove(tiles[2])
+            tile.update()
+            if tile != tossedTile:
+                self.hand.remove(tile)
 
         for i in range(len(self.hand)):
             # move all the tiles back
@@ -200,24 +181,27 @@ class Player:
     def findPairs(self, currentHand):
         # returns a list containing every pair in players hand
         pairs = []
-        for tile in currentHand:
-            currentPair = [tile]
-            tileRep = repr(tile)
-            for otherTile in currentHand:
-                if repr(tile) == tileRep and otherTile not in currentPair:
-                    currentPair.append(otherTile)
-                    pairs.append(currentPair)
-                    break
+        for i in range(len(currentHand)-1):
+            tile1 = currentHand[i]
+            for j in range(i + 1, len(currentHand)):
+                tile2 = currentHand[j]
+                if tile1 == tile2:
+                    pairs.append([tile1, tile2])
 
-        return pairs
+        pairsNoRepeats = []
+        for pair in pairs:
+            if pair not in pairsNoRepeats:
+                pairsNoRepeats.append(pair)
+            
+        return pairsNoRepeats
 
-    @ staticmethod
+    @staticmethod
     def canHuGivenPair(currentHand, sets = []):
         # takes a hand, excluding a pair, and returns true of the hand can be
         # arranged entirely into sets of 3 (backtracking!!!)
         
         if len(currentHand) == 0:
-                return True
+                return sets
 
         else:
             # check every triple
@@ -232,7 +216,7 @@ class Player:
                             for tile in tiles:
                                 currentHand.remove(tile)
                             solution = Player.canHuGivenPair(currentHand, sets)
-                            if solution:
+                            if solution != False:
                                 return solution
                             else:
                                 # undo
@@ -244,16 +228,16 @@ class Player:
     def canHu(self, tossedTile):
         # checks if player can Hu (win the game)
         currentHand = self.hand + [tossedTile]
-        # print(currentHand)
-        # print(len(currentHand))
         pairs = self.findPairs(currentHand)
         for pair in pairs:
             # checks if player can Hu, given every possible pair
             for tile in pair:
                 currentHand.remove(tile)
-            if not Player.canHuGivenPair(currentHand):
+            solution = Player.canHuGivenPair(currentHand)
+            if not solution:
                 currentHand += pair
             else:
+                self.hand = solution
                 return True
         return False
 
@@ -263,18 +247,17 @@ class Player:
         tile = deck.pop(0)
         tile.location = 'hand'
         tile.theta = 90 * self.num
+        tile.update()
         if tile.suit == 'season' or tile.suit == 'flower':
             self.tossTile(tile)
             tile = self.drawTileFromBack(deck)
 
         return tile
 
-        # print(f'Drawn Tile: {tile}', end='')
-        # print(f'Hand: {self.hand}')
-
     def drawTileFromBack(self, deck):
         tile = deck.pop()
         tile.location = 'hand'
+        tile.update()
         if tile.suit == 'season' or tile.suit == 'flower':
             self.tossTile(tile)
             tile = self.drawTileFromBack(deck)
@@ -285,6 +268,7 @@ class Player:
         # tosses a selected tile from player's hand
         self.hand.remove(tile)
         tile.location = 'tossed'
+        tile.update()
         for i in range(len(self.hand)):
             # move all the tiles back
             self.hand[i].index = i
@@ -302,7 +286,7 @@ class Player:
                             if tile.rect.collidepoint(pos):
                                 tossedTile = tile
                                 return tossedTile
-                        if drawnTile.rect.collidepoint(pos):
+                        if drawnTile != None and drawnTile.rect.collidepoint(pos):
                                 tossedTile = drawnTile
                                 return tossedTile
 
@@ -339,7 +323,9 @@ class Player:
             self.hand[i].index = i
 
         print(tileToToss)
+        print(tileToToss.location)
         tileToToss.location = 'tossed'
+        tileToToss.update()
         return tileToToss
 
 def giveHands(players, deck):
@@ -378,27 +364,9 @@ def getHand(deck):
         tile = deck.pop(0)
         hand.append(tile)
         tile.location = 'hand'
+        tile.update()
 
     return hand
-
-def tileSort(hand):
-    # modified merge sort from https://www.cs.cmu.edu/~112/notes/notes-recursion-part1.html#mergesort
-    def merge(A, B):
-        if ((len(A) == 0) or (len(B) == 0)):
-            return A+B
-        else:
-            if (A[0].value < B[0].value):
-                return [A[0]] + merge(A[1:], B)
-            else:
-                return [B[0]] + merge(A, B[1:])
-    
-    if (len(hand) < 2):
-        return hand
-    else:
-        mid = len(hand)//2
-        left = tileSort(hand[:mid])
-        right = tileSort(hand[mid:])
-        return merge(left, right)
 
 def nonSuitSort(hand):
     sortedHand = []
@@ -427,10 +395,9 @@ def sortHand(hand):
             sticks.append(tile)
 
     nonSuits = nonSuitSort(nonSuits)
-    nums = tileSort(nums)
-    circles = tileSort(circles)
-    sticks = tileSort(sticks)
-
+    nums.sort()
+    circles.sort()
+    sticks.sort()
 
     sortedHand = nonSuits + nums + circles + sticks
     return sortedHand

@@ -4,7 +4,7 @@ from globals import *
 pygame.init()
 
 # screen
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH + SIDEBAR, HEIGHT))
 screen.fill(GREEN)
 
 running = True
@@ -24,12 +24,12 @@ def runGame():
     displayOtherHands(players, activePlayer, screen)
     displayDrawn(drawnTile, activePlayer.hand, screen)
     displayDeck(deck, screen)
+    displaySidebar(screen)
+    displayButtons(activePlayer, None, 0, screen)
     pygame.display.update()
-    
-    #deck, tossedTile, deadTiles, turn = firstTurn(players, deck, deadTiles, turn)
+
     tossedTile = activePlayer.getTossedTile(drawnTile)
     
-
     if tossedTile != drawnTile:
         activePlayer.tossTile(tossedTile)
         activePlayer.hand.append(drawnTile)
@@ -40,10 +40,11 @@ def runGame():
     displayOtherRevealed(players, activePlayer, screen)
     displayDead(deadTiles, screen)
     displayDeck(deck, screen)
+    displaySidebar(screen)
+    displayButtons(activePlayer, tossedTile, 0, screen)
     pygame.display.update()
 
     while not gameOver(players, tossedTile):
-        # print(player.hand for player in players)
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
@@ -54,21 +55,25 @@ def runGame():
                                                                         tossedTile, 
                                                                         deadTiles, 
                                                                         turn, 
-                                                                        dealer)
+                                                                        dealer, 
+                                                                        screen)
 
         drawnTile, deck = startTurn(players[turn], action, tossedTile, deck)
 
-        print(drawnTile is None)
-
         screen.fill(GREEN)
         displayHand(activePlayer.hand, screen)
+        if turn == activePlayer.num and not (drawnTile is None):
+            displayDrawn(drawnTile, activePlayer.hand, screen)
         displayOtherHands(players, activePlayer, screen)
         displayRevealed(activePlayer.revealed, screen)
         displayOtherRevealed(players, activePlayer, screen)
-        if turn == activePlayer.num and not (drawnTile is None):
-            displayDrawn(drawnTile, activePlayer.hand, screen)
         displayDead(deadTiles, screen)
         displayDeck(deck, screen)
+        if action != None and action != False:
+            displaySidebar(screen, f'{players[turn].name} will {action}')
+        else:
+            displaySidebar(screen)
+        displayButtons(activePlayer, tossedTile, turn, screen)
         pygame.display.update()
 
         tossedTile = middleTurn(players[turn], drawnTile, deadTiles, screen)
@@ -80,11 +85,14 @@ def runGame():
         displayOtherRevealed(players, activePlayer, screen)
         displayDead(deadTiles, screen)
         displayDeck(deck, screen)
+        displaySidebar(screen)
+        displayButtons(activePlayer, tossedTile, turn, screen)
         pygame.display.update()
         FPS.tick(30)
 
     # exited while loop
-    endGame(players, turn, dealer)
+    endGame(players, turn, dealer, screen)
+    runGame()
 
     
 runGame()

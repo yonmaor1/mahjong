@@ -59,12 +59,12 @@ def gameOver(players, tossedTile):
         return True
     return False
 
-def checkForAction(players, tossedTile, turn):
+def checkForAction(players, tossedTile, deadTiles, turn, screen):
     # called in endTurn > while not gameOver()
     # check if players want to Kong / Pong
-    wantsToPong = wantsToKong = False
-
-    for player in [ players[turn], players[(turn+1)%4], players[(turn+2)%4] ]:
+    displayTossed(tossedTile, deadTiles, screen)
+    pygame.display.update()
+    for player in [ players[(turn+0)%4], players[(turn+1)%4], players[(turn+2)%4] ]:
         action = None
         if player.canPong(tossedTile):
             # Kong if and only if Pong
@@ -74,26 +74,27 @@ def checkForAction(players, tossedTile, turn):
                     turn = player.num
                     break
                 else:
-                    # input must be bool
-                    wantsToKong = input(f'{player.name} can Kong. Would you like to?')
+                    rects, booleans = displayButtons(player, tossedTile, turn, screen)
+                    action = getAction(rects, booleans)
             else:
                 if player.isAI:
                     action = 'pong'
                     turn = player.num
                     break
                 else:
-                    # input must be bool
-                    wantsToPong = input(f'{player.name} can Pong. Would you like to?')
+                    rects, booleans = displayButtons(player, tossedTile, turn, screen)
+                    action = getAction(rects, booleans)
             
-            if wantsToKong: 
-                action = 'kong'
+            if action == 'kong': 
                 turn = player.num
                 break
-            elif wantsToPong: 
-                action = 'pong'
+            elif action == 'pong': 
                 turn = player.num
                 break
-            else: 
+            elif action == 'hu':
+                turn = player.num
+                break
+            else:
                 action = None
     return action, turn
 
@@ -118,33 +119,32 @@ def firstTurn(players, deck, deadTiles, turn):
 
     return deck, tossedTile, deadTiles, turn
 
-def endTurn(players, deck, tossedTile, deadTiles, turn, dealer):
+def endTurn(players, deck, tossedTile, deadTiles, turn, dealer, screen):
+
+    turn = (turn + 1) % 4
 
     # to make sure player doesn't Stanley (pong / chi then draw a tile)
     action = None
 
     # check if anyone can Pong / Kong
-    # if so, skip to their turn 
-    action, turn = checkForAction(players, tossedTile, turn)
+    # if so, skip to their turn
+    action, turn = checkForAction(players, tossedTile, deadTiles, turn, screen)
     
     # if nobody Pongs/Kongs, check for Chi (only following player can Chi)
-    # BUG: chi doesn't work. commented out for now
-    nextPlayer = players[(turn + 1) % 4]
-    '''if (action is None) and (nextPlayer.canChi(tossedTile)):
+    nextPlayer = players[turn]
+    if (action is None) and (nextPlayer.canChi(tossedTile)):
         if nextPlayer.isAI:
             action = 'chi'
         else:
-            # input must be bool
-            wantsToChi = input(f'{nextPlayer.name} can Chi. Would you like to?')
-            if wantsToChi:
-                action = 'chi'
-    '''
+            rects, booleans = displayButtons(nextPlayer, tossedTile, turn, screen)
+            action = getAction(rects, booleans)
 
-    if action is None:
+    if action == None or action == False:
         # if no action happened, tile is now dead
         deadTiles.append(tossedTile)
-            
-    turn = (turn + 1) % 4
+
+    displayButtons(players[turn], None, turn, screen)
+    pygame.display.update()
 
     return deck, tossedTile, action, deadTiles, turn, dealer
 
@@ -188,31 +188,39 @@ def middleTurn(player, drawnTile, deadTiles, screen):
     return tileToToss
 
 
-def endGame(players, turn, dealer):
+def endGame(players, turn, dealer, screen):
     # somebody can Hu
+    for player in players:
+        if player.won:
+            winner = player
+            print(f'{winner.name} won!!')
+            for tile in winner.hand:
+                tile.location = 'hu'
+                tile.update()
+                tile.draw(screen)
+            pygame.display.update()
+            # whoever tossed out winning card is loser, unless winner drew card
+            # not using loser rn, might impliment betting / drinking  
+            losers = [ players[turn] ]
+            if losers[0] is winner:
+                losers = [  players[(turn + 1) % 4], 
+                            players[(turn + 2) % 4], 
+                            players[(turn + 3) % 4] ]
+    
+    '''keepPlaying = input(f'{winner.name} won! Keep playing?')
+
+    if not keepPlaying:
+        # want to quit game
+        return
+
+    # BUG: reset must happen in game.py
+    if winner is dealer:
+        # if dealer won they stay dealer
+        endTurn(players)
+
+    else:
+        # if dealer lost, player 1 becomes dealer
         for player in players:
-            if player.won:
-                winner = player
-                # whoever tossed out winning card is loser, unless winner drew card
-                # not using loser rn, might impliment betting / drinking  
-                losers = [ players[turn] ]
-                if losers[0] is winner:
-                    losers = [  players[(turn + 1) % 4], 
-                                players[(turn + 2) % 4], 
-                                players[(turn + 3) % 4] ]
-                keepPlaying = input(f'{winner.name} won! Keep playing?')
-
-        if not keepPlaying:
-            # want to quit game
-            return
-
-        # BUG: reset must happen in game.py
-        if winner is dealer:
-            # if dealer won they stay dealer
-            endTurn(players)
-
-        else:
-            # if dealer lost, player 1 becomes dealer
-            for player in players:
-                player.num = (player.num + 1) % 4
-            endTurn(players)
+            player.num = (player.num + 1) % 4
+        endTurn(players)
+    '''
