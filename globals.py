@@ -2,6 +2,7 @@ from pygame.locals import *
 import pygame, random, sys, math, copy, time
 
 WIDTH, HEIGHT = 860, 860
+BOARD = pygame.Rect(0, 0, WIDTH, HEIGHT)
 SIDEBAR = 250
 MARGIN = 20
 WHITE = (255,255,255)
@@ -23,7 +24,7 @@ def frange(initial, final, step):
     L = [initial]
     if step == 0:
         return L
-        
+
     steps = abs(final - initial) // step
 
     if final == initial:

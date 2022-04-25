@@ -140,14 +140,14 @@ class Tile:
         surface.blit(self.image, (  MARGIN + self.width * self.index, 
                                     HEIGHT - 2.2*self.height - MARGIN))
 
-    def slideTile(self, screen, x1, y1, xStep = 5):
+    def slideStep(self, screen, x1, y1, players, activePlayer, turn, deadTiles, deck, tossedTile, xStep = 5):
         x0, y0 = self.x, self.y
-        if (x0, y0) == (0,0):
-           # don't slide when initializing game
+        if ((x0, y0) == (0,0) or (x0, y0) == (x1, y1)):
+            # don't slide when initializing game or redrawing
             self.x, self.y = x1, y1
-            self.update()
-            self.draw(screen)
-            pygame.display.update()
+            # self.update()
+            # self.draw(screen)
+            # pygame.display.update()
             return 
 
         try:

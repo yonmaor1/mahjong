@@ -24,7 +24,13 @@ class Player:
     def pong(self, tossedTile):
         # revels pong and removes tiles from hand
         print(f'{self.name} will pong')
-        pong = [tossedTile, tossedTile, tossedTile]
+        pong = [tossedTile]
+        for tile in self.hand:
+            if tile == tossedTile:
+                pong.append(tile)
+            if len(pong) == 3:
+                break
+        
 
         self.revealed.append(pong)
         for tile in pong:
@@ -49,7 +55,12 @@ class Player:
         # revelas the Kong and removes tiles from hand
         # tile is drawn in playerTurn 
         print(f'{self.name} will kong')
-        kong = [tossedTile, tossedTile, tossedTile, tossedTile]
+        kong = [tossedTile]
+        for tile in self.hand:
+            if tile == tossedTile:
+                kong.append(tile)
+            if len(kong) == 4:
+                break
         
         self.revealed.append(kong)
         for tile in kong:
@@ -130,6 +141,7 @@ class Player:
         
         return False
 
+    # this function is not used, AI chooses tiles for player
     def getChiTiles(self, tossedTile, tiles):
         # destructivly modifies [list] tiles to contain the tiles
         # selected by the player 
@@ -146,20 +158,35 @@ class Player:
         return tiles
 
     def getChiTilesAI(self, tossedTile):
-        # destructivly modifies [list] tiles to contain the tiles
-        # selected by mahjbot
-        tiles = []
-
+        chi = [tossedTile]
+        # the for loops here are to allow for tile sliding, by ensuring the
+        # tiles the player chis are the actual tile ojects in their hand rather
+        # then creating new tile instances 
         if tossedTile + 1 in self.hand and tossedTile + 2 in self.hand:
-            tiles = [ tossedTile, tossedTile + 1, tossedTile + 2 ]
+            for tile in self.hand:
+                if (tile == tossedTile + 1 or tile == tossedTile + 2):
+                    if tile not in chi:
+                        chi.append(tile)
+                if len(chi) == 3:
+                    break
         elif tossedTile - 1  in self.hand and tossedTile - 2 in self.hand:
-            tiles = [ tossedTile, tossedTile - 1, tossedTile - 2 ]
+            for tile in self.hand:
+                if (tile == tossedTile - 1 or tile == tossedTile - 2):
+                    if tile not in chi:
+                        chi.append(tile)
+                if len(chi) == 3:
+                    break
         elif tossedTile - 1 in self.hand and tossedTile + 1 in self.hand:
-            tiles = [ tossedTile, tossedTile - 1, tossedTile + 1 ]
+            for tile in self.hand:
+                if (tile == tossedTile - 1 or tile == tossedTile + 1):
+                    if tile not in chi:
+                        chi.append(tile)
+                if len(chi) == 3:
+                    break
 
-        print(sorted(tiles))
+        print(sorted(chi))
     
-        return sorted(tiles)
+        return sorted(chi)
 
     def chi(self, tossedTile):
         # gets selected tiles, revels them and removes them from hand

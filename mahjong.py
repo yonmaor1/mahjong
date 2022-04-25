@@ -59,10 +59,10 @@ def gameOver(players, tossedTile):
         return True
     return False
 
-def checkForAction(players, tossedTile, deadTiles, turn, screen):
+def checkForAction(players, tossedTile, deadTiles, turn, deck, screen):
     # called in endTurn > while not gameOver()
     # check if players want to Kong / Pong
-    displayTossed(tossedTile, deadTiles, screen)
+    displayTossed(tossedTile, players, players[0], turn, deadTiles, deck, screen)
     pygame.display.update()
     for player in [ players[(turn+0)%4], players[(turn+1)%4], players[(turn+2)%4] ]:
         action = None
@@ -106,8 +106,6 @@ def initGame(players):
     giveHands(players, deck)
     # if dealer wins they stay dealer
     dealer = players[0]
-    # for debugging
-    # players[2].revealed = [ [ Tile('fa', None), Tile('fa', None), Tile('fa', None) ] ]
 
     return deck, deadTiles, turn, dealer
 
@@ -128,7 +126,7 @@ def endTurn(players, deck, tossedTile, deadTiles, turn, dealer, screen):
 
     # check if anyone can Pong / Kong
     # if so, skip to their turn
-    action, turn = checkForAction(players, tossedTile, deadTiles, turn, screen)
+    action, turn = checkForAction(players, tossedTile, deadTiles, turn, deck, screen)
     
     # if nobody Pongs/Kongs, check for Chi (only following player can Chi)
     nextPlayer = players[turn]
@@ -168,7 +166,7 @@ def startTurn(player, action, tossedTile, deck):
     return drawnTile, deck
     
     
-def middleTurn(player, drawnTile, deadTiles, screen):
+def middleTurn(player, players, turn, drawnTile, deadTiles, deck, screen):
     # must toss tile
     if player.isAI:
         tileToToss = player.tossTileAI()
@@ -177,7 +175,7 @@ def middleTurn(player, drawnTile, deadTiles, screen):
         if tileToToss != drawnTile:
             player.tossTile(tileToToss)
 
-    displayTossed(tileToToss, deadTiles, screen)
+    displayTossed(None, players, players[0], turn, deadTiles, deck, screen)
     pygame.display.update()
     time.sleep(0.5)
     

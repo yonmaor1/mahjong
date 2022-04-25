@@ -17,15 +17,18 @@ def displayHand(hand, screen):
         tile.update()
         tile.draw(screen)
 
-def displayDrawn(tile, hand, screen):
+def displayDrawn(tile, hand, players, activePlayer, turn, deadTiles, deck, tossedTile, screen):
+    if tile is None:
+        return
+
     xFinal, yFinal = (  MARGIN + len(hand) * tile.width + MARGIN, 
                         HEIGHT - tile.height - MARGIN)
-    tile.slideTile(screen, xFinal, yFinal)
+    slideTile(tile, screen, xFinal, yFinal, players, activePlayer, turn, deadTiles, deck, tossedTile)
 
     tile.update()
     tile.draw(screen)
 
-def displayRevealed(revealed, screen):
+def displayRevealed(revealed, players, activePlayer, turn, deadTiles, deck, tossedTile, screen):
     index = 0
     for set in revealed:
         for i in range(len(set)):
@@ -34,13 +37,13 @@ def displayRevealed(revealed, screen):
             offset = 10 * (index // 3)
             xFinal, yFinal = (  MARGIN + offset + tile.width * index, 
                                 HEIGHT - 2.2*tile.height - MARGIN)
-            tile.slideTile(screen, xFinal, yFinal)
+            slideTile(tile, screen, xFinal, yFinal, players, activePlayer, turn, deadTiles, deck, tossedTile)
             
             tile.update()
             tile.draw(screen)
             index += 1
 
-def displayDead(deadTiles, screen):
+def displayDead(deadTiles, players, activePlayer, turn, deck, tossedTile, screen):
     # where to start drawing dead tiles
     deadX, deadY = (WIDTH - MARGIN - rowLength + MARGIN, 
                     HEIGHT - stacksPerSide * tileWidth)
@@ -49,22 +52,24 @@ def displayDead(deadTiles, screen):
         tile = deadTiles[i]
         xFinal, yFinal = (  deadX + (i % tilesPerRow) * tileWidth, 
                             deadY + (i // tilesPerRow) * tileHeight)
-        tile.slideTile(screen, xFinal, yFinal)
+        slideTile(tile, screen, xFinal, yFinal, players, activePlayer, turn, deadTiles, deck, tossedTile)
         
         tile.update()
         tile.draw(screen)
 
-def displayTossed(tile, deadTiles, screen):
+def displayTossed(tile, players, activePlayer, turn, deadTiles, deck, screen):
+    if tile is None:
+        return
+
     deadX, deadY = (WIDTH - MARGIN - rowLength + MARGIN, 
                     HEIGHT - stacksPerSide * tileWidth)
     xFinal, yFinal = (  deadX + (len(deadTiles) % tilesPerRow) * tileWidth + 10, 
                         deadY + (len(deadTiles) // tilesPerRow) * tileHeight + 10)
-    tile.slideTile(screen, xFinal, yFinal)
-
+    slideTile(tile, screen, xFinal, yFinal,  players, activePlayer, turn, deadTiles, deck, None)
     tile.update()
     tile.draw(screen)
 
-def displayOtherHands(players, activePlayer, screen):
+def displayOtherHands(players, activePlayer, turn, deadTiles, deck, tossedTile, screen):
     num = activePlayer.num
     passivePlayers = [ players[(num+1)%4], players[(num+2)%4], players[(num+3)%4] ]
     for player in passivePlayers:
@@ -84,26 +89,26 @@ def displayOtherHands(players, activePlayer, screen):
             if playerNum == 1:
                 xFinal, yFinal = (  WIDTH - MARGIN - tileDepth, 
                                     HEIGHT - MARGIN - i * tileWidth - tileWidth)
-                tile.slideTile(screen, xFinal, yFinal)
+                slideTile(tile, screen, xFinal, yFinal,  players, activePlayer, turn, deadTiles, deck, tossedTile)
 
                 tile.update()
                 tile.draw(screen)
             elif playerNum == 2:
                 xFinal, yFinal = (  WIDTH - MARGIN - i * tileWidth - tileWidth, 
                                     MARGIN)
-                tile.slideTile(screen, xFinal, yFinal)
+                slideTile(tile, screen, xFinal, yFinal,  players, activePlayer, turn, deadTiles, deck, tossedTile)
 
                 tile.update()
                 tile.draw(screen)
             elif playerNum == 3:
                 xFinal, yFinal = (  MARGIN, 
                                     MARGIN + i * tileWidth)
-                tile.slideTile(screen, xFinal, yFinal)
+                slideTile(tile, screen, xFinal, yFinal,  players, activePlayer, turn, deadTiles, deck, tossedTile)
 
                 tile.update()
                 tile.draw(screen)
 
-def displayOtherRevealed(players, activePlayer, screen):
+def displayOtherRevealed(players, activePlayer, turn, deadTiles, deck, tossedTile, screen):
     num = activePlayer.num
     passivePlayers = [ players[(num+1)%4], players[(num+2)%4], players[(num+3)%4] ]
     for player in passivePlayers:
@@ -119,21 +124,21 @@ def displayOtherRevealed(players, activePlayer, screen):
                 if playerNum == 1:
                     xFinal, yFinal = (  WIDTH - MARGIN - 2 * tileDepth - tileHeight, 
                                         HEIGHT - MARGIN - tileIndex * tileWidth - tileWidth - offset)
-                    tile.slideTile(screen, xFinal, yFinal)
+                    slideTile(tile, screen, xFinal, yFinal,  players, activePlayer, turn, deadTiles, deck, tossedTile)
 
                     tile.update()
                     tile.draw(screen)
                 elif playerNum == 2:
                     xFinal, yFinal = (  WIDTH - MARGIN - tileIndex * tileWidth - tileWidth - offset, 
                                         MARGIN + 2 * tileDepth)
-                    tile.slideTile(screen, xFinal, yFinal)
+                    slideTile(tile, screen, xFinal, yFinal,  players, activePlayer, turn, deadTiles, deck, tossedTile)
 
                     tile.update()
                     tile.draw(screen)
                 elif playerNum == 3:
                     xFinal, yFinal = (  MARGIN + 2 * tileDepth, 
                                         MARGIN + tileIndex * tileWidth + offset)
-                    tile.slideTile(screen, xFinal, yFinal)
+                    slideTile(tile, screen, xFinal, yFinal,  players, activePlayer, turn, deadTiles, deck, tossedTile)
 
                     tile.update()
                     tile.draw(screen)
@@ -346,4 +351,71 @@ def displaySidebar(screen, text=''):
     sideBar = pygame.Rect(WIDTH, 0, SIDEBAR, HEIGHT)
     pygame.draw.rect(screen, WHITE, sideBar)
     chatBox(text, screen)
+    pygame.display.update()
+
+def slideTile(tile, screen, x1, y1, players, activePlayer, turn, deadTiles, deck, tossedTile, xStep = 5):
+    if tile is None:
+        return
+
+    x0, y0 = tile.x, tile.y
+    if ((x0, y0) == (0,0) or (x0, y0) == (x1, y1)):
+        # don't slide when initializing game or redrawing
+        tile.x, tile.y = x1, y1
+        # self.update()
+        # self.draw(screen)
+        # pygame.display.update()
+        return 
+
+    try:
+        xSteps = int(abs(x1 - x0) // xStep)
+        yStep = abs(y1 - y0) / xSteps
+        xPositions = frange(x0, x1, xStep)
+        yPositions = frange(y0, y1, yStep)
+        for i in range(xSteps + 1):
+            if i > 0:
+                # erase last drawing
+                prevRect = pygame.Rect( xPositions[i-1], yPositions[i-1], 
+                                        tile.width, tile.height)
+                pygame.draw.rect(screen, GREEN, prevRect)
+                for player in players:
+                    for tile in player.hand:
+                        if prevRect.colliderect(tile.rect):
+                            tile.draw(screen)
+                for tile in deck:
+                    if prevRect.colliderect(tile.rect):
+                        tile.draw(screen)
+                for tile in deadTiles:
+                    if prevRect.colliderect(tile.rect):
+                        tile.draw(screen)
+                if tossedTile != None:
+                    if prevRect.colliderect(tossedTile.rect):
+                            tile.draw(screen)
+
+            xPos = xPositions[i]
+            yPos = yPositions[i]
+            tile.x, tile.y = xPos, yPos
+            tile.update()
+            tile.draw(screen)
+            pygame.display.update()
+
+    except:
+        if tile is None:
+            return
+            
+        tile.x, tile.y = x1, y1
+        tile.update()
+        tile.draw(screen)
+        pygame.display.update()
+        return 
+
+def displayAll(players, activePlayer, turn, deadTiles, deck, tossedTile, screen):
+    pygame.draw.rect(screen, GREEN, BOARD)
+    displayHand(activePlayer.hand, screen)
+    displayOtherHands(players, activePlayer, turn, deadTiles, deck, tossedTile, screen)
+    displayRevealed(activePlayer.revealed, players, activePlayer, turn, deadTiles, deck, tossedTile, screen)
+    displayOtherRevealed(players, activePlayer, turn, deadTiles, deck, tossedTile, screen)
+    displayDead(deadTiles, players, activePlayer, turn, deck, tossedTile, screen)
+    displayDeck(deck, screen)
+    displaySidebar(screen)
+    displayButtons(activePlayer, tossedTile, turn, screen)
     pygame.display.update()
