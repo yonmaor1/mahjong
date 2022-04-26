@@ -140,14 +140,14 @@ class Tile:
         surface.blit(self.image, (  MARGIN + self.width * self.index, 
                                     HEIGHT - 2.2*self.height - MARGIN))
 
-    def slideTile(self, screen, x1, y1, xStep = 5):
+    def tileSlide(self, screen, x1, y1, xStep = 5):
         x0, y0 = self.x, self.y
-        if (x0, y0) == (0,0):
-           # don't slide when initializing game
+        if ((x0, y0) == (0,0) or (x0, y0) == (x1, y1)):
+            # don't slide when initializing game or redrawing
             self.x, self.y = x1, y1
-            self.update()
-            self.draw(screen)
-            pygame.display.update()
+            # self.update()
+            # self.draw(screen)
+            # pygame.display.update()
             return 
 
         try:
@@ -158,9 +158,11 @@ class Tile:
             for i in range(xSteps + 1):
                 if i > 0:
                     # erase last drawing
-                    prevRect = pygame.Rect( xPositions[i-1], yPositions[i-1], 
-                                            self.width, self.height)
-                    pygame.draw.rect(screen, GREEN, prevRect)
+                    self.size = self.width, self.height
+                    prevImg = pygame.image.load('img/green.png')
+                    prevImg = pygame.transform.scale(prevImg, self.size)
+                    prevImg = pygame.transform.rotate(prevImg, self.theta)
+                    screen.blit(prevImg, (xPositions[i-1], yPositions[i-1]))
 
                 xPos = xPositions[i]
                 yPos = yPositions[i]
@@ -175,5 +177,3 @@ class Tile:
             self.draw(screen)
             pygame.display.update()
             return 
-
-
