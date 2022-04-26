@@ -2,6 +2,7 @@ from pygame.locals import *
 import pygame, random, sys, math, copy, time
 
 WIDTH, HEIGHT = 860, 860
+BOARD = pygame.Rect(0, 0, WIDTH, HEIGHT)
 SIDEBAR = 250
 MARGIN = 20
 WHITE = (255,255,255)

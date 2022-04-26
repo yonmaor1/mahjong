@@ -66,6 +66,9 @@ def checkForAction(players, tossedTile, deadTiles, turn, screen):
     pygame.display.update()
     for player in [ players[(turn+0)%4], players[(turn+1)%4], players[(turn+2)%4] ]:
         action = None
+        if player.canHu(tossedTile):
+            player.won = True
+            endGame(players, turn, screen)
         if player.canPong(tossedTile):
             # Kong if and only if Pong
             if player.canKong(tossedTile):
@@ -165,6 +168,9 @@ def startTurn(player, action, tossedTile, deck):
     else:
         drawnTile = player.drawTile(deck)
 
+    if player.isAI:
+        player.hand.append(drawnTile)
+
     return drawnTile, deck
     
     
@@ -174,22 +180,24 @@ def middleTurn(player, drawnTile, deadTiles, screen):
         tileToToss = player.tossTileAI()
     else:
         tileToToss = player.getTossedTile(drawnTile)
-        if tileToToss != drawnTile:
+        if not (tileToToss is drawnTile):
             player.tossTile(tileToToss)
 
     displayTossed(tileToToss, deadTiles, screen)
     pygame.display.update()
     time.sleep(0.5)
     
-    if tileToToss != drawnTile and tileToToss != None:
+    if not (tileToToss is drawnTile) and tileToToss != None:
         # only now add the drawn tile to the hand (if it wasn't thrown out)
-        player.hand.append(drawnTile)
+        if not player.isAI:
+            player.hand.append(drawnTile)
     
     return tileToToss
 
 
-def endGame(players, turn, dealer, screen):
+def endGame(players, turn, screen):
     # somebody can Hu
+    print('entered endgame')
     for player in players:
         if player.won:
             winner = player

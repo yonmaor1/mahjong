@@ -28,10 +28,11 @@ def displayDrawn(tile, hand, screen):
 def displayRevealed(revealed, screen):
     index = 0
     for set in revealed:
+        setIndex = revealed.index(set)
         for i in range(len(set)):
             tile = set[i]
             tile.location = 'revealed'
-            offset = 10 * (index // 3)
+            offset = 10 * setIndex
             xFinal, yFinal = (  MARGIN + offset + tile.width * index, 
                                 HEIGHT - 2.2*tile.height - MARGIN)
             tile.slideTile(screen, xFinal, yFinal)

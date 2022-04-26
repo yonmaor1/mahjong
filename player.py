@@ -24,18 +24,18 @@ class Player:
     def pong(self, tossedTile):
         # revels pong and removes tiles from hand
         print(f'{self.name} will pong')
-        pong = [tossedTile, tossedTile, tossedTile]
-
+        pong = [tossedTile]
+        while len(pong) < 3:
+            index = self.hand.index(tossedTile)
+            pongTile = self.hand.pop(index)
+            pong.append(pongTile)
+        
         self.revealed.append(pong)
         for tile in pong:
             tile.location = 'revealed'
             tile.update()
             if tile in self.hand:
                 self.hand.remove(tile)
-
-        for i in range(len(self.hand)):
-            # move all the tiles back
-            self.hand[i].index = i
 
     def canKong(self, tile):
         # returns True of player has 3 additional copies of the tossed tile in
@@ -49,7 +49,11 @@ class Player:
         # revelas the Kong and removes tiles from hand
         # tile is drawn in playerTurn 
         print(f'{self.name} will kong')
-        kong = [tossedTile, tossedTile, tossedTile, tossedTile]
+        kong = [tossedTile]
+        while len(kong) < 4:
+            index = self.hand.index(tossedTile)
+            pongTile = self.hand.pop(index)
+            kong.append(pongTile)
         
         self.revealed.append(kong)
         for tile in kong:
@@ -57,10 +61,6 @@ class Player:
             tile.update()
             if tile in self.hand:
                 self.hand.remove(tile)
-
-        for i in range(len(self.hand)):
-            # move all the tiles back
-            self.hand[i].index = i
 
     def canChi(self, tile):
         # returns True of player has 3 consequtive tiles given the tossedTile
@@ -87,6 +87,10 @@ class Player:
     def isChi(tiles):
         # takes a [list] of 3 tiles, and returns True if they are consequtive
         # tiles of the same suit 
+        if None in tiles:
+            print('Nonetype found in chi')
+            return False
+
         suits = [ tile.suit for tile in tiles ]
         if (None in suits):
             # can only Chi suit cards
@@ -130,6 +134,7 @@ class Player:
         
         return False
 
+    # this function is not used, AI chooses tiles for player
     def getChiTiles(self, tossedTile, tiles):
         # destructivly modifies [list] tiles to contain the tiles
         # selected by the player 
@@ -146,20 +151,35 @@ class Player:
         return tiles
 
     def getChiTilesAI(self, tossedTile):
-        # destructivly modifies [list] tiles to contain the tiles
-        # selected by mahjbot
-        tiles = []
-
+        chi = [tossedTile]
+        # the for loops here are to allow for tile sliding, by ensuring the
+        # tiles the player chis are the actual tile ojects in their hand rather
+        # then creating new tile instances 
         if tossedTile + 1 in self.hand and tossedTile + 2 in self.hand:
-            tiles = [ tossedTile, tossedTile + 1, tossedTile + 2 ]
+            for tile in self.hand:
+                if (tile == tossedTile + 1 or tile == tossedTile + 2):
+                    if tile not in chi:
+                        chi.append(tile)
+                if len(chi) == 3:
+                    break
         elif tossedTile - 1  in self.hand and tossedTile - 2 in self.hand:
-            tiles = [ tossedTile, tossedTile - 1, tossedTile - 2 ]
+            for tile in self.hand:
+                if (tile == tossedTile - 1 or tile == tossedTile - 2):
+                    if tile not in chi:
+                        chi.append(tile)
+                if len(chi) == 3:
+                    break
         elif tossedTile - 1 in self.hand and tossedTile + 1 in self.hand:
-            tiles = [ tossedTile, tossedTile - 1, tossedTile + 1 ]
+            for tile in self.hand:
+                if (tile == tossedTile - 1 or tile == tossedTile + 1):
+                    if tile not in chi:
+                        chi.append(tile)
+                if len(chi) == 3:
+                    break
 
-        print(sorted(tiles))
+        print(sorted(chi))
     
-        return sorted(tiles)
+        return sorted(chi)
 
     def chi(self, tossedTile):
         # gets selected tiles, revels them and removes them from hand
@@ -173,10 +193,6 @@ class Player:
             tile.update()
             if tile != tossedTile:
                 self.hand.remove(tile)
-
-        for i in range(len(self.hand)):
-            # move all the tiles back
-            self.hand[i].index = i
 
     def findPairs(self, currentHand):
         # returns a list containing every pair in players hand
@@ -229,6 +245,11 @@ class Player:
         # checks if player can Hu (win the game)
         currentHand = self.hand + [tossedTile]
         pairs = self.findPairs(currentHand)
+
+        if len(currentHand) == 2:
+            if currentHand[0] == currentHand[1]:
+                return True
+
         for pair in pairs:
             # checks if player can Hu, given every possible pair
             for tile in pair:
@@ -330,10 +351,10 @@ class Player:
 
 def giveHands(players, deck):
     # initializes players with hands
-    players[0].hand = sortHand(getHand(deck))
-    players[1].hand = sortHand(getHand(deck))
-    players[2].hand = sortHand(getHand(deck))
-    players[3].hand = sortHand(getHand(deck))
+    players[0].hand = (getHand(deck))
+    players[1].hand = (getHand(deck))
+    players[2].hand = (getHand(deck))
+    players[3].hand = (getHand(deck))
 
     for player in players:
         print(len(player.hand))

@@ -19,13 +19,13 @@ def runGame():
     activePlayer = players[0]
     deck, deadTiles, turn, dealer = initGame(players)
     drawnTile = activePlayer.drawTile(deck)
-    
-    displayHand(activePlayer.hand, screen)
-    displayOtherHands(players, activePlayer, screen)
-    displayDrawn(drawnTile, activePlayer.hand, screen)
+
     displayDeck(deck, screen)
     displaySidebar(screen)
     displayButtons(activePlayer, None, 0, screen)
+    displayHand(activePlayer.hand, screen)
+    displayOtherHands(players, activePlayer, screen)
+    displayDrawn(drawnTile, activePlayer.hand, screen)
     pygame.display.update()
 
     tossedTile = activePlayer.getTossedTile(drawnTile)
@@ -34,14 +34,15 @@ def runGame():
         activePlayer.tossTile(tossedTile)
         activePlayer.hand.append(drawnTile)
 
-    displayHand(activePlayer.hand, screen)
-    displayOtherHands(players, activePlayer, screen)
-    displayRevealed(activePlayer.revealed, screen)
-    displayOtherRevealed(players, activePlayer, screen)
-    displayDead(deadTiles, screen)
     displayDeck(deck, screen)
     displaySidebar(screen)
     displayButtons(activePlayer, tossedTile, 0, screen)
+    displayDead(deadTiles, screen)
+    displayOtherHands(players, activePlayer, screen)
+    displayRevealed(activePlayer.revealed, screen)
+    displayOtherRevealed(players, activePlayer, screen)
+    displayHand(activePlayer.hand, screen)
+    
     pygame.display.update()
 
     while not gameOver(players, tossedTile):
@@ -60,38 +61,42 @@ def runGame():
 
         drawnTile, deck = startTurn(players[turn], action, tossedTile, deck)
 
+        if players[turn].canHu(drawnTile):
+            players[turn].won = True
+            break
+
         screen.fill(GREEN)
-        displayHand(activePlayer.hand, screen)
-        if turn == activePlayer.num and not (drawnTile is None):
-            displayDrawn(drawnTile, activePlayer.hand, screen)
-        displayOtherHands(players, activePlayer, screen)
-        displayRevealed(activePlayer.revealed, screen)
-        displayOtherRevealed(players, activePlayer, screen)
-        displayDead(deadTiles, screen)
-        displayDeck(deck, screen)
         if action != None and action != False:
             displaySidebar(screen, f'{players[turn].name} will {action}')
         else:
             displaySidebar(screen)
         displayButtons(activePlayer, tossedTile, turn, screen)
+        displayDead(deadTiles, screen)
+        displayDeck(deck, screen)
+        displayHand(activePlayer.hand, screen)
+        displayOtherHands(players, activePlayer, screen)
+        displayRevealed(activePlayer.revealed, screen)
+        displayOtherRevealed(players, activePlayer, screen)
+        if turn == activePlayer.num and not (drawnTile is None):
+            displayDrawn(drawnTile, activePlayer.hand, screen)
         pygame.display.update()
 
         tossedTile = middleTurn(players[turn], drawnTile, deadTiles, screen)
 
         screen.fill(GREEN)
+        displaySidebar(screen)
+        displayButtons(activePlayer, tossedTile, turn, screen)
+        displayDeck(deck, screen)
         displayHand(activePlayer.hand, screen)
         displayOtherHands(players, activePlayer, screen)
         displayRevealed(activePlayer.revealed, screen)
         displayOtherRevealed(players, activePlayer, screen)
         displayDead(deadTiles, screen)
-        displayDeck(deck, screen)
-        displaySidebar(screen)
-        displayButtons(activePlayer, tossedTile, turn, screen)
         pygame.display.update()
         FPS.tick(30)
 
     # exited while loop
-    endGame(players, turn, dealer, screen)
+    endGame(players, turn, screen)
     runGame()
 
     
