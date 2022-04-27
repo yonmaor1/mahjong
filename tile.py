@@ -1,6 +1,10 @@
 from pygame.locals import *
 from globals import *
 
+'''this is the tile class. its used the represent tiles, display them in pygame
+and perform actions on them. Magic methids are used to create tile arithmatic
+for sorting and easily checkign if tiles can be made into sets'''
+
 # class to draw tile
 class Tile:
     def __init__(self, value, suit, location = None, index = None):

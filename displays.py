@@ -1,6 +1,9 @@
 from tile import *
 from globals import *
 
+'''this file holds all of the display functions that are called in game.py
+each function displays a different game component'''
+
 def displayHand(hand, screen):
     for i in range(len(hand)):
         tile = hand[i]

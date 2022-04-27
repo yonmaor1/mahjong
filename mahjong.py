@@ -2,6 +2,8 @@ from player import *
 from globals import *
 from displays import *
 
+'''This file contains most of the game logic, and game initialization'''
+
 def getDeck():
     # returns a complete deck (still missing flowers / seasons)
     deck = []

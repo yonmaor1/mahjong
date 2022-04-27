@@ -1,6 +1,11 @@
 from pygame.locals import *
 import pygame, random, sys, math, copy, time
 
+'''global functions and variables (sorry...) 
+This are game-wide constants that never change, such as colors, window size, 
+and game objects sizes. This file makes all the necessary imports, and is 
+imported by all other files '''
+
 WIDTH, HEIGHT = 860, 860
 MARGIN = 20
 BOARD = pygame.Rect(0, 0, WIDTH, HEIGHT)
