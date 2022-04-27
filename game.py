@@ -10,8 +10,10 @@ screen.fill(GREEN)
 running = True
 
 
-def runGame():
-    activeName = getActiveName(screen)
+def runGame(activeName = None):
+    if activeName is None:
+        activeName = getActiveName(screen)
+
     screen.fill(GREEN)
 
     players = initPlayers(activeName)
@@ -61,12 +63,16 @@ def runGame():
 
         drawnTile, deck = startTurn(players[turn], action, tossedTile, deck)
 
+        if players[turn].canHu(drawnTile):
+            players[turn].won = True
+            break
+
         # screen.fill(GREEN)
+        displayRevealed(activePlayer.revealed, screen)
         displayHand(activePlayer.hand, screen)
         if turn == activePlayer.num and not (drawnTile is None):
             displayDrawn(drawnTile, activePlayer.hand, screen)
         displayOtherHands(players, activePlayer, screen)
-        displayRevealed(activePlayer.revealed, screen)
         displayOtherRevealed(players, activePlayer, screen)
         displayDead(deadTiles, screen)
         displayDeck(deck, screen)
@@ -75,26 +81,35 @@ def runGame():
         else:
             displaySidebar(screen)
         displayButtons(activePlayer, tossedTile, turn, screen)
-        pygame.display.update()
+        pygame.display.flip()
 
         tossedTile = middleTurn(players[turn], drawnTile, deadTiles, screen)
+        for player in players:
+            if player.canHu(drawnTile):
+                player.won = True
+                break
 
         # screen.fill(GREEN)
         pygame.draw.rect(screen, GREEN, BOARD, 0)
-        displayHand(activePlayer.hand, screen)
         displayOtherHands(players, activePlayer, screen)
         displayRevealed(activePlayer.revealed, screen)
+        displayHand(activePlayer.hand, screen)
         displayOtherRevealed(players, activePlayer, screen)
         displayDead(deadTiles, screen)
         displayDeck(deck, screen)
         displaySidebar(screen)
         displayButtons(activePlayer, tossedTile, turn, screen)
-        pygame.display.update()
+        pygame.display.flip()
         FPS.tick(30)
 
     # exited while loop
-    endGame(players, turn, dealer, screen)
-    runGame()
+    keepPlaying = endGame(players, turn, screen)
+    if keepPlaying:
+        runGame(activeName)
+    else: 
+        pygame.quit()
+        sys.exit()
+
 
     
 runGame()

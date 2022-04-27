@@ -268,6 +268,7 @@ class Player:
         tile = deck.pop(0)
         tile.location = 'hand'
         tile.theta = 90 * self.num
+        tile.oldSize = tile.size
         tile.update()
         if tile.suit == 'season' or tile.suit == 'flower':
             self.tossTile(tile)
@@ -288,6 +289,7 @@ class Player:
     def tossTile(self, tile):
         # tosses a selected tile from player's hand
         self.hand.remove(tile)
+        tile.oldSize = tile.size
         tile.location = 'tossed'
         tile.update()
         for i in range(len(self.hand)):

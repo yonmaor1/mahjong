@@ -215,8 +215,9 @@ def endGame(players, turn, screen):
                             players[(turn + 2) % 4], 
                             players[(turn + 3) % 4] ]
     
-    '''keepPlaying = input(f'{winner.name} won! Keep playing?')
-
+    keepPlaying = displayEndGame(players, turn, screen)
+    return keepPlaying
+    '''
     if not keepPlaying:
         # want to quit game
         return

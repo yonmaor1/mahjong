@@ -16,6 +16,11 @@ def displayHand(hand, screen):
         
         tile.update()
         tile.draw(screen)
+    
+    handWidth = len(hand) * tileWidth
+    coverRect = pygame.Rect(MARGIN + handWidth, HEIGHT - tileHeight - MARGIN, 
+                            tileWidth * 4, tileHeight)
+    pygame.draw.rect(screen, GREEN, coverRect, 0)
 
 def displayDrawn(tile, hand, screen):
     xFinal, yFinal = (  MARGIN + len(hand) * tile.width + MARGIN, 
@@ -371,20 +376,28 @@ def displayEndGame(players, turn, screen):
     
     messageBox = pygame.Rect(WIDTH/4, HEIGHT/4, WIDTH/2, HEIGHT/2)
     pygame.draw.rect(screen, PINK, messageBox)
-    winFont = pygame.font.Font(None, 32)
+    winFont = pygame.font.Font(None, 54)
     buttonFont = pygame.font.Font(None, 24)
     winMsg = f'{winner.name} won!!!'
-    buttonMsg = 'play again?'
-    buttonWidth = SIDEBAR - 2*MARGIN
+    playMsg = 'PLAY AGAIN?'
+    quitMsg = 'QUIT'
+    buttonWidth = 7*MARGIN
     buttonHeight = 3*MARGIN
-    buttonRect = pygame.Rect((WIDTH - buttonWidth)/2, (HEIGHT - buttonHeight)/2 - MARGIN, 
-                            buttonWidth, buttonHeight)
+    playButtonRect = pygame.Rect(   (WIDTH - buttonWidth)/3, 3*(HEIGHT - buttonHeight)/5 - MARGIN, 
+                                    buttonWidth, buttonHeight)
+    quitButtonRect = pygame.Rect(   2*(WIDTH - buttonWidth)/3, 3*(HEIGHT - buttonHeight)/5 - MARGIN, 
+                                    buttonWidth, buttonHeight)
 
     winText = winFont.render(winMsg, True, BLACK)
-    buttonText = buttonFont.render(buttonMsg, True, BLACK)
-    screen.blit(winText, ((WIDTH - buttonWidth)/2, (HEIGHT - buttonHeight)/2 + MARGIN))
-    pygame.draw.rect(screen, MINT, buttonRect)
-    screen.blit(buttonText, ((WIDTH - buttonWidth)/2, (HEIGHT - buttonHeight)/2 - MARGIN))
+    playText = buttonFont.render(playMsg, True, BLACK)
+    quitText = buttonFont.render(quitMsg, True, BLACK)
+    centerX = 3 * (winText.get_rect(center = screen.get_rect().center).x) // 4
+    centerY = winText.get_rect(center = screen.get_rect().center).y - 4 * MARGIN
+    screen.blit(winText, (centerX, centerY))
+    pygame.draw.rect(screen, MINT, playButtonRect, 0, buttonHeight//2)
+    pygame.draw.rect(screen, MINT, quitButtonRect, 0, buttonHeight//2)
+    screen.blit(playText, (playButtonRect.x + 12, playButtonRect.y + 23))
+    screen.blit(quitText, (quitButtonRect.x + 45, quitButtonRect.y + 23))
     pygame.display.update()
     while True:
         for event in pygame.event.get():
@@ -392,5 +405,7 @@ def displayEndGame(players, turn, screen):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if buttonRect.collidepoint(event.pos):
+                if playButtonRect.collidepoint(event.pos):
                     return True
+                elif quitButtonRect.collidepoint(event.pos):
+                    return False

@@ -26,7 +26,7 @@ class Tile:
         self.scaleFactor = tileRatio # height to width ratio
         self.width = tileWidth
         self.height = tileHeight
-        self.size = self.width, self.height
+        self.oldSize = self.size = self.width, self.height
         self.width, self.height = self.size
         self.depth = tileDepth
         self.image = pygame.transform.scale(self.image, self.size)
@@ -125,8 +125,8 @@ class Tile:
         self.image = pygame.transform.rotate(self.image, self.theta)
     
     def draw(self, surface):
-        pygame.transform.scale(self.image, self.size)
-        pygame.transform.rotate(self.image, self.theta)
+        # pygame.transform.scale(self.image, self.size)
+        # pygame.transform.rotate(self.image, self.theta)
         surface.blit(self.image, (self.x,self.y))
 
     
@@ -159,7 +159,7 @@ class Tile:
                     # erase last drawing
                     self.size = self.width, self.height
                     prevImg = pygame.image.load('img/green.png')
-                    prevImg = pygame.transform.scale(prevImg, self.size)
+                    prevImg = pygame.transform.scale(prevImg, self.oldSize)
                     prevImg = pygame.transform.rotate(prevImg, self.theta)
                     firstFrame = pygame.image.load('img/firstFrame.jpg')
                     screen.blit(firstFrame, (0, 0))
