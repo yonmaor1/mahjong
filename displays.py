@@ -204,10 +204,14 @@ def displayDeck(deck, screen):
             bottomTile.draw(screen)
 
 def getActiveName(screen):
+    # referenced https://www.geeksforgeeks.org/how-to-create-a-text-input-box-with-pygame/
     font = pygame.font.Font(None, 32)
+    headerFont = pygame.font.Font(None, 82)
     prompt = 'please enter your name:'
+    header = 'ITS MAHJTIME!!!!!'
     inputW, inputH = 140, 32
-    inputBox = pygame.Rect((WIDTH - inputW)/2, (HEIGHT - inputH)/2, inputW, inputH)
+    inputBox = pygame.Rect( (WIDTH - inputW)/2, (HEIGHT - inputH)/2, 
+                            inputW, inputH)
     colorInactive = pygame.Color('lightskyblue3')
     colorActive = pygame.Color('dodgerblue2')
     color = colorInactive
@@ -221,13 +225,11 @@ def getActiveName(screen):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                    # If the user clicked on the inputBox rect.
                     if inputBox.collidepoint(event.pos):
-                        # Toggle the active variable.
                         active = not active
                     else:
                         active = False
-                    # Change the current color of the input box.
+                    # change the color of the input box.
                     color = colorActive if active else colorInactive
             if event.type == pygame.KEYDOWN:
                 if active:
@@ -244,12 +246,16 @@ def getActiveName(screen):
         # Render the current text.
         txtSurface = font.render(text, True, color)
         promptSurface = font.render(prompt, True, color)
+        headerSurface = headerFont.render(header, True, color)
         # Resize the box if the text is too long.
         width = max(200, txtSurface.get_width()+10)
         inputBox.w = width
         # Blit the text.
-        screen.blit(promptSurface, (inputBox.x, inputBox.y-32))
-        screen.blit(txtSurface, (inputBox.x+5, inputBox.y+5))
+        centerX = 3 * (headerSurface.get_rect(center = screen.get_rect().center).x) // 4
+        centerY = headerSurface.get_rect(center = screen.get_rect().center).y - 4 * MARGIN
+        screen.blit(promptSurface, (inputBox.x, inputBox.y - 32))
+        screen.blit(txtSurface, (inputBox.x + 5, inputBox.y + 5))
+        screen.blit(headerSurface, (centerX + 10, centerY))
         # Blit the inputBox rect.
         pygame.draw.rect(screen, color, inputBox, 2)
         pygame.display.update()

@@ -2,10 +2,11 @@ from pygame.locals import *
 import pygame, random, sys, math, copy, time
 
 WIDTH, HEIGHT = 860, 860
+MARGIN = 20
 BOARD = pygame.Rect(0, 0, WIDTH, HEIGHT)
 SIDEBAR = 250
 SIDEBARRECT = pygame.Rect(WIDTH, 0, SIDEBAR, HEIGHT)
-MARGIN = 20
+WEDGE = pygame.Rect(WIDTH, 0, MARGIN, HEIGHT)
 WHITE = (255,255,255)
 BLACK = (0,0,0)
 GREEN = (73,160,117)
