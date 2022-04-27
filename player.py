@@ -351,10 +351,10 @@ class Player:
 
 def giveHands(players, deck):
     # initializes players with hands
-    players[0].hand = (getHand(deck))
-    players[1].hand = (getHand(deck))
-    players[2].hand = (getHand(deck))
-    players[3].hand = (getHand(deck))
+    players[0].hand = sortHand(getHand(deck))
+    players[1].hand = sortHand(getHand(deck))
+    players[2].hand = sortHand(getHand(deck))
+    players[3].hand = sortHand(getHand(deck))
 
     for player in players:
         print(len(player.hand))
@@ -379,7 +379,7 @@ def replaceFlowers(players, deck):
     return players
 
 def getHand(deck):
-    # draws 16 random cards from the deck, then removes them from the deck
+    # draws 16 cards from the deck, then removes them from the deck
     hand = []
     while len(hand) < 16:
         tile = deck.pop(0)
@@ -390,13 +390,37 @@ def getHand(deck):
     return hand
 
 def nonSuitSort(hand):
-    sortedHand = []
+    dungs = []
+    nans = []
+    xis = []
+    beis = []
+
+    zhongs = []
+    fas = []
+    boxs = []
+
     for tile in hand:
-        if not tile in sortedHand:
-            sortedHand += [tile for i in range(hand.count(tile))]
+        if tile.value == 'dung':
+            dungs.append(tile)
+        elif tile.value == 'nan':
+            nans.append(tile)
+        elif tile.value == 'xi':
+            xis.append(tile)
+        elif tile.value == 'bei':
+            beis.append(tile)
+        
+        elif tile.value == 'zhong':
+            zhongs.append(tile)
+        elif tile.value == 'fa':
+            fas.append(tile)
+        elif tile.value == 'box':
+            boxs.append(tile)
+
+    sortedHand = []
+    sortedHand += ( dungs + nans + xis + beis + 
+                    zhongs + fas + boxs )
         
     return sortedHand
-
 
 def sortHand(hand):
     # sorts hand by suite (not by value)

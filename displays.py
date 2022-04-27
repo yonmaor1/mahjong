@@ -321,10 +321,11 @@ def displayButtons(player, tossedTile, turn, screen):
 
         pygame.draw.rect(screen, color, rect, 0, 5)
         screen.blit(text, (rect.x+5, rect.y+5))
+        pygame.display.update()
 
     return rects, booleans
 
-def getAction(rects, booleans):
+def getAction(rects, booleans, screen):
     actions = [ 'pong', 'kong', 'chi', 'hu', False ]
     # if player wants to pass, action is False
     action = None
@@ -342,9 +343,54 @@ def getAction(rects, booleans):
                             # Toggle the active variable.
                             action = actions[i]
                             return action
+    displayButtons(None, None, None, screen)
 
 def displaySidebar(screen, text=''):
-    sideBar = pygame.Rect(WIDTH, 0, SIDEBAR, HEIGHT)
-    pygame.draw.rect(screen, WHITE, sideBar)
+    # sideBar = pygame.Rect(WIDTH, 0, SIDEBAR, HEIGHT)
+    # pygame.draw.rect(screen, WHITE, sideBar)
     chatBox(text, screen)
     pygame.display.update()
+
+def displayEndGame(players, turn, screen):
+    for player in players:
+        if player.won:
+            winner = player
+
+    for tile in winner.hand:
+        tile.location = 'hu'
+        tile.update()
+        tile.draw(screen)
+    
+    # whoever tossed out winning card is loser, unless winner drew card
+    # not using loser rn, might impliment betting / drinking  
+    losers = [ players[turn] ]
+    if losers[0] is winner:
+        losers = [  players[(turn + 1) % 4], 
+                    players[(turn + 2) % 4], 
+                    players[(turn + 3) % 4] ]
+    
+    messageBox = pygame.Rect(WIDTH/4, HEIGHT/4, WIDTH/2, HEIGHT/2)
+    pygame.draw.rect(screen, PINK, messageBox)
+    winFont = pygame.font.Font(None, 32)
+    buttonFont = pygame.font.Font(None, 24)
+    winMsg = f'{winner.name} won!!!'
+    buttonMsg = 'play again?'
+    buttonWidth = SIDEBAR - 2*MARGIN
+    buttonHeight = 3*MARGIN
+    buttonRect = pygame.Rect((WIDTH - buttonWidth)/2, (HEIGHT - buttonHeight)/2 - MARGIN, 
+                            buttonWidth, buttonHeight)
+
+    winText = winFont.render(winMsg, True, BLACK)
+    buttonText = buttonFont.render(buttonMsg, True, BLACK)
+    screen.blit(winText, ((WIDTH - buttonWidth)/2, (HEIGHT - buttonHeight)/2 + MARGIN))
+    pygame.draw.rect(screen, MINT, buttonRect)
+    screen.blit(buttonText, ((WIDTH - buttonWidth)/2, (HEIGHT - buttonHeight)/2 - MARGIN))
+    pygame.display.update()
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if buttonRect.collidepoint(event.pos):
+                    return True

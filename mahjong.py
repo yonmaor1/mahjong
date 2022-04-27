@@ -78,7 +78,7 @@ def checkForAction(players, tossedTile, deadTiles, turn, screen):
                     break
                 else:
                     rects, booleans = displayButtons(player, tossedTile, turn, screen)
-                    action = getAction(rects, booleans)
+                    action = getAction(rects, booleans, screen)
             else:
                 if player.isAI:
                     action = 'pong'
@@ -86,7 +86,7 @@ def checkForAction(players, tossedTile, deadTiles, turn, screen):
                     break
                 else:
                     rects, booleans = displayButtons(player, tossedTile, turn, screen)
-                    action = getAction(rects, booleans)
+                    action = getAction(rects, booleans, screen)
             
             if action == 'kong': 
                 turn = player.num
@@ -140,7 +140,7 @@ def endTurn(players, deck, tossedTile, deadTiles, turn, dealer, screen):
             action = 'chi'
         else:
             rects, booleans = displayButtons(nextPlayer, tossedTile, turn, screen)
-            action = getAction(rects, booleans)
+            action = getAction(rects, booleans, screen)
 
     if action == None or action == False:
         # if no action happened, tile is now dead
