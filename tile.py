@@ -51,7 +51,7 @@ class Tile:
         elif self.suit is None:
             print('tile arithmatic not supported for winds / dragons')
         elif (self.value + x) > 9:
-            print('value out of range')
+            # ('value out of range')
             return Tile(self.value + x, self.suit)
 
     def __sub__(self, x):
@@ -62,7 +62,7 @@ class Tile:
         elif self.suit is None:
             print('tile arithmatic not supported for winds / dragons')
         elif (self.value - x) < 1:
-            print(f'value out of range')
+            # print(f'value out of range')
             return Tile(self.value - x, self.suit)
 
     def __eq__(self, other):
@@ -177,7 +177,7 @@ class Tile:
                 pygame.display.update()
 
         except Exception as e:
-            print(e)
+            # print(e)
             self.x, self.y = x1, y1
             self.update()
             self.draw(screen)

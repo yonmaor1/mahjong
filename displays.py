@@ -22,7 +22,7 @@ def displayHand(hand, screen):
     
     handWidth = len(hand) * tileWidth
     coverRect = pygame.Rect(MARGIN + handWidth, HEIGHT - tileHeight - MARGIN, 
-                            tileWidth * 4, tileHeight)
+                            18*tileWidth - handWidth, tileHeight)
     pygame.draw.rect(screen, GREEN, coverRect, 0)
 
 def displayDrawn(tile, hand, screen):
@@ -321,7 +321,7 @@ def displayButtons(player, tossedTile, turn, screen):
 
         booleans = [player.canPong(tossedTile), player.canKong(tossedTile), 
                     canChi, player.canHu(tossedTile)]
-        canPass = (turn == playerTurn) and (True in booleans)
+        canPass = (turn == playerTurn and canChi) or (True in booleans)
         booleans.append(canPass)
     
     for i in range(len(rects)):
@@ -374,6 +374,7 @@ def displayEndGame(players, turn, screen):
         tile.location = 'hu'
         tile.update()
         tile.draw(screen)
+    pygame.display.flip()
     
     # whoever tossed out winning card is loser, unless winner drew card
     # not using loser rn, might impliment betting / drinking  

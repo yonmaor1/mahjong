@@ -1,6 +1,9 @@
 from mahjong import *
 from globals import *
 
+'''this file runs the game by initializing pygame, setting up the screen 
+surface, and callign display functions'''
+
 pygame.init()
 
 # screen
@@ -61,6 +64,15 @@ def runGame(activeName = None):
                                                                         dealer, 
                                                                         screen)
 
+        for i in range(len(players) - 1):
+            player = players[i]
+            for j in range(len(player.hand)):
+                playerTile = player.hand[j]
+                for otherPlayer in players[i + 1:]:
+                    for otherTile in otherPlayer.hand:
+                        if playerTile is otherTile:
+                            print(f'{playerTile} duplicate')
+
         drawnTile, deck = startTurn(players[turn], action, tossedTile, deck)
 
         if players[turn].canHu(drawnTile):
@@ -68,6 +80,7 @@ def runGame(activeName = None):
             break
 
         # screen.fill(GREEN)
+        pygame.draw.rect(screen, WHITE, WEDGE, 0)
         displayRevealed(activePlayer.revealed, screen)
         displayHand(activePlayer.hand, screen)
         if turn == activePlayer.num and not (drawnTile is None):
@@ -90,6 +103,7 @@ def runGame(activeName = None):
                 break
 
         # screen.fill(GREEN)
+        pygame.draw.rect(screen, WHITE, WEDGE, 0)
         pygame.draw.rect(screen, GREEN, BOARD, 0)
         displayOtherHands(players, activePlayer, screen)
         displayRevealed(activePlayer.revealed, screen)

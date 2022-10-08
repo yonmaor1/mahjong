@@ -1,6 +1,12 @@
 from pygame.locals import *
 from tile import *
 from globals import *
+from displays import *
+
+'''This is the palyer class. All of the players are initialized as Player 
+objects with names and numbers, and their state (AI or not). This file contains
+functions that perform player actiosn such as Pong or Chi, Draw / Toss tiles, 
+etc'''
 
 class Player:
     def __init__(self, name, num, isAI):
@@ -88,7 +94,7 @@ class Player:
         # takes a [list] of 3 tiles, and returns True if they are consequtive
         # tiles of the same suit 
         if None in tiles:
-            print('Nonetype found in chi')
+            # print('Nonetype found in chi')
             return False
 
         suits = [ tile.suit for tile in tiles ]
@@ -345,8 +351,8 @@ class Player:
             # move all the tiles back
             self.hand[i].index = i
 
-        print(tileToToss)
-        print(tileToToss.location)
+        # print(tileToToss)
+        # print(tileToToss.location)
         tileToToss.location = 'tossed'
         tileToToss.update()
         return tileToToss
